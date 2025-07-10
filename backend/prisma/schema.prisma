@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for a task status
+enum TaskStatus {
+  new
+  in_progress
+  done
+  canceled
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+
+  publicId   String   @unique
+  Name       String
+  Email      String
+  Password   String
+  Position   String?
+  created_at DateTime @default(now())
+
+  assignedTasks Task[]
+
+  // Many-to-many rel: one employee can have many skills
+  skills Skill[] @relation("EmployeeSkills")
+
+  @@map("employees")
+}
+
+model Skill {
+  id   Int    @id @default(autoincrement())
+  Name String @unique
+
+  // Many-to-many relationship: one skill can be shared by many employees
+  employees Employee[] @relation("EmployeeSkills")
+  // Many-to-many relationship: one skill may be required for many tasks
+  tasks     Task[]     @relation("TaskSkills")
+
+  @@map("skills")
+}
+
+model Task {
+  id                  Int        @id @default(autoincrement())
+  publicId   String   @unique
+  Name                String
+  Description         String?
+  Status              TaskStatus
+  time_estimate_hours Int?
+  created_at          DateTime   @default(now())
+
+  assignee_id Int?
+  assignee    Employee?  @relation(fields: [assignee_id], references: [id])
+
+  project_id Int
+  project    Project    @relation(fields: [project_id], references: [id])
+
+  // Many-to-many relationship: a task may require many skills
+  requiredSkills Skill[] @relation("TaskSkills")
+
+  @@map("tasks")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  publicId   String   @unique
+  Name        String
+  Description String?
+  created_at  DateTime @default(now())
+
+  // One-to-many relationship: there can be many tasks in a project
+  tasks Task[]
+
+  @@map("projects")
+}
