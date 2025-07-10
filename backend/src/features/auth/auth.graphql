@@ -1,0 +1,23 @@
+# Type for an answer with a token
+type AuthPayload {
+  token: String!
+  employee: Employee!
+}
+
+input SignUpInput {
+  Name: String!
+  Email: String!
+  Password: String!
+}
+
+input LoginInput {
+  Email: String!
+  Password: String!
+}
+
+type Mutation {
+  # new employee registration
+  signup(input: SignUpInput): AuthPayload!
+
+  login(input: LoginInput): AuthPayload!
+}
