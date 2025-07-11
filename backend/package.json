@@ -23,6 +23,8 @@
     "@graphql-codegen/cli": "^5.0.7",
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-resolvers": "^4.5.1",
-    "prisma": "^6.11.1"
+    "@types/jsonwebtoken": "^9.0.10",
+    "prisma": "^6.11.1",
+    "typescript": "^5.8.3"
   }
 }
