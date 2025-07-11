@@ -1,4 +1,5 @@
 import { GraphQLResolveInfo } from 'graphql';
+import { Employee } from '@prisma/client';
 import { Context } from '../context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -7,6 +8,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -131,7 +133,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
-  AuthPayload: ResolverTypeWrapper<AuthPayload>;
+  AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Employee: ResolverTypeWrapper<Employee>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
@@ -143,7 +145,7 @@ export type ResolversTypes = ResolversObject<{
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
-  AuthPayload: AuthPayload;
+  AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
   Boolean: Scalars['Boolean']['output'];
   Employee: Employee;
   ID: Scalars['ID']['output'];

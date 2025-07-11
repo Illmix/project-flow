@@ -11,8 +11,12 @@ const config: CodegenConfig = {
 
             config: {
                 contextType: '../context#Context',
-
                 useIndexSignature: true,
+                mappers: {
+                    // This tells codegen to find the 'Employee' type
+                    // exported from the '@prisma/client' package.
+                    Employee: '@prisma/client#Employee',
+                },
             },
         },
     },
