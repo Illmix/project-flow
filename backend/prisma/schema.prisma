@@ -20,7 +20,7 @@ model Employee {
 
   publicId   String   @unique
   Name       String
-  Email      String
+  Email      String   @unique
   Password   String
   Position   String?
   created_at DateTime @default(now())
@@ -68,7 +68,7 @@ model Task {
 
 model Project {
   id          Int      @id @default(autoincrement())
-  publicId   String   @unique
+  publicId    String   @unique
   Name        String
   Description String?
   created_at  DateTime @default(now())

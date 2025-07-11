@@ -9,7 +9,7 @@ export interface Context {
     prisma: PrismaClient;
 }
 
-export const createContext = async ({ req }): Promise<Context> => {
+export const createContext = async (): Promise<Context> => {
     return {
         prisma
     };
