@@ -10,11 +10,8 @@ const config: CodegenConfig = {
             plugins: ['typescript', 'typescript-resolvers'],
 
             config: {
-                // This is crucial: It tells the generator the exact path and name
-                // of your context type, so your resolvers' context argument is correctly typed.
                 contextType: '../src/context#Context',
 
-                // This prevents errors if you haven't implemented every single resolver yet.
                 useIndexSignature: true,
             },
         },
