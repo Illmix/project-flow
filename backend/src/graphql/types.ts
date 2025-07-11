@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from 'graphql';
-import { Employee } from '@prisma/client';
+import { Employee as PrismaEmployee } from '@prisma/client';
 import { Context } from '../context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -135,7 +135,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = ResolversObject<{
   AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
-  Employee: ResolverTypeWrapper<Employee>;
+  Employee: ResolverTypeWrapper<PrismaEmployee>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
@@ -147,7 +147,7 @@ export type ResolversTypes = ResolversObject<{
 export type ResolversParentTypes = ResolversObject<{
   AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
   Boolean: Scalars['Boolean']['output'];
-  Employee: Employee;
+  Employee: PrismaEmployee;
   ID: Scalars['ID']['output'];
   LoginInput: LoginInput;
   Mutation: {};
