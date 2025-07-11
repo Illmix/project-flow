@@ -1,0 +1,8 @@
+# This file defines the root entry points for the API.
+type Query {
+  _empty: String
+}
+
+type Mutation {
+  _empty: String
+}
