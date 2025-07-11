@@ -10,7 +10,7 @@ const config: CodegenConfig = {
             plugins: ['typescript', 'typescript-resolvers'],
 
             config: {
-                contextType: '../src/context#Context',
+                contextType: '../context#Context',
 
                 useIndexSignature: true,
             },
