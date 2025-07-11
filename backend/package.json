@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "graphql": "^16.11.0",
     "jsonwebtoken": "^9.0.2",
+    "loadsh": "^0.0.4",
     "nodemon": "^3.1.10"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-resolvers": "^4.5.1",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.20",
     "prisma": "^6.11.1",
     "typescript": "^5.8.3"
   }
