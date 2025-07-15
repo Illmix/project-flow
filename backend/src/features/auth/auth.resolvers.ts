@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import { GraphQLError } from 'graphql';
-import type { Resolvers } from '../../graphql/types';
-import type { Context } from '../../context';
+import type { Resolvers } from '../../graphql/types.js';
+import type { Context } from '../../context.js';
 
 // Get the JWT secret from environment variables.
 const JWT_SECRET = process.env.JWT_SECRET;

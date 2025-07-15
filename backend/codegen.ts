@@ -10,7 +10,7 @@ const config: CodegenConfig = {
             plugins: ['typescript', 'typescript-resolvers'],
 
             config: {
-                contextType: '../context#Context',
+                contextType: '../context.js#Context',
                 useIndexSignature: true,
                 mappers: {
                     // This tells codegen to find the 'Employee' type

@@ -3,10 +3,10 @@ import 'dotenv/config';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 
-import { typeDefs } from './src/graphql/typeDefs';
-import { resolvers } from './src/graphql/resolvers';
+import { typeDefs } from './src/graphql/typeDefs.js';
+import { resolvers } from './src/graphql/resolvers.js';
 
-import { createContext } from './src/context';
+import { createContext } from './src/context.js';
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 
