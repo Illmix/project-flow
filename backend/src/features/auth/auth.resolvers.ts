@@ -33,7 +33,7 @@ export const authResolvers: Resolvers = {
                     Name: input.Name,
                     Email: input.Email,
                     Password: hashedPassword,
-                    publicId: randomUUID(),
+                    publicId: randomUUID().slice(0, 6),
                 },
             });
 
