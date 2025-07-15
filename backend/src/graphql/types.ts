@@ -30,7 +30,6 @@ export type Employee = {
   Name: Scalars['String']['output'];
   Position?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
   publicId: Scalars['String']['output'];
 };
 
@@ -53,6 +52,11 @@ export type MutationLoginArgs = {
 
 export type MutationSignupArgs = {
   input?: InputMaybe<SignUpInput>;
+};
+
+export type Query = {
+  __typename?: 'Query';
+  getEmployees: Array<Employee>;
 };
 
 export type SignUpInput = {
@@ -136,9 +140,9 @@ export type ResolversTypes = ResolversObject<{
   AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Employee: ResolverTypeWrapper<PrismaEmployee>;
-  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
+  Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 }>;
@@ -148,9 +152,9 @@ export type ResolversParentTypes = ResolversObject<{
   AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
   Boolean: Scalars['Boolean']['output'];
   Employee: PrismaEmployee;
-  ID: Scalars['ID']['output'];
   LoginInput: LoginInput;
   Mutation: {};
+  Query: {};
   SignUpInput: SignUpInput;
   String: Scalars['String']['output'];
 }>;
@@ -166,7 +170,6 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -176,9 +179,14 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
 }>;
 
+export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  getEmployees?: Resolver<Array<ResolversTypes['Employee']>, ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = Context> = ResolversObject<{
   AuthPayload?: AuthPayloadResolvers<ContextType>;
   Employee?: EmployeeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Query?: QueryResolvers<ContextType>;
 }>;
 

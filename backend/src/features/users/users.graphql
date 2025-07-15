@@ -1,8 +1,11 @@
 type Employee {
-  id: ID!
   publicId: String!
   Name: String!
   Email: String!
   Position: String
   created_at: String!
+}
+
+extend type Query {
+  getEmployees: [Employee!]!
 }
