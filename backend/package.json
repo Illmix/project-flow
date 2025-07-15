@@ -2,9 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.ts",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node server.ts",
+    "dev": "nodemon --exec node --loader ts-node/esm server.ts",
     "codegen": "graphql-codegen --config codegen.ts"
   },
   "keywords": [],
