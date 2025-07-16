@@ -6,7 +6,7 @@ type Employee {
   created_at: String!
 }
 
-type UpdateEmployeeInput {
+input UpdateEmployeeInput {
   Name: String!
   Email: String!
   Position: String
@@ -16,9 +16,9 @@ type Query {
   getEmployees: [Employee]
   getEmployee(publicId: String!): Employee
   me: Employee
-  deleteMe: Employee
 }
 
 type Mutation {
-    updateEmployee(publicId: String!, input: UpdateEmployeeInput!): Employee
+  updateEmployee(publicId: String!, input: UpdateEmployeeInput!): Employee
+  deleteMe: Employee
 }

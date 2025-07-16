@@ -53,7 +53,9 @@ export const usersResolvers: Resolvers = {
         updateEmployee: authenticated(async (_parent, {publicId, input}, context) => {
             return context.prisma.employee.update({
                 where: { publicId },
-                data: input
+                data: {
+                    ...input
+                }
             });
         }),
         /**
