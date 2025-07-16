@@ -7,5 +7,7 @@ type Employee {
 }
 
 extend type Query {
-  getEmployees: [Employee!]!
+  getEmployees: [Employee]
+  getEmployee(publicId: String!): Employee
+  me: Employee
 }

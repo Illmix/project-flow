@@ -9,6 +9,7 @@ export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Mayb
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -56,7 +57,13 @@ export type MutationSignupArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  getEmployees: Array<Employee>;
+  getEmployee?: Maybe<Employee>;
+  getEmployees?: Maybe<Array<Maybe<Employee>>>;
+};
+
+
+export type QueryGetEmployeeArgs = {
+  publicId: Scalars['String']['input'];
 };
 
 export type SignUpInput = {
@@ -180,7 +187,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  getEmployees?: Resolver<Array<ResolversTypes['Employee']>, ParentType, ContextType>;
+  getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
+  getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{

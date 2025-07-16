@@ -1,4 +1,3 @@
-# Type for an answer with a token
 type AuthPayload {
   token: String!
   employee: Employee!
