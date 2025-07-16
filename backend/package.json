@@ -4,6 +4,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
+    "test": "jest",
     "dev": "nodemon --exec node --loader ts-node/esm server.ts",
     "codegen": "graphql-codegen --config codegen.ts"
   },
@@ -28,8 +29,11 @@
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-resolvers": "^4.5.1",
     "@types/glob": "^8.1.0",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "jest": "^30.0.4",
     "prisma": "^6.11.1",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
