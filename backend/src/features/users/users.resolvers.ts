@@ -40,5 +40,31 @@ export const usersResolvers: Resolvers = {
 
             return context.prisma.employee.findUnique({ where: { publicId: currentEmployee.publicId } });
         },
+        deleteMe: async (_parent, _args, context) => {
+            // Authorization: Check if a user is logged in via the context.
+            const currentEmployee = context.currentEmployee;
+            if (!currentEmployee) {
+                throw new GraphQLError('You must be logged in to perform this action.', {
+                    extensions: { code: 'UNAUTHENTICATED' },
+                });
+            }
+
+            return context.prisma.employee.delete({ where: { publicId: currentEmployee.publicId } });
+        },
     },
+    Mutation: {
+        updateEmployee: async (_parent, {publicId, input}, context) => {
+            // Authorization: Check if a user is logged in via the context.
+            if (!context.currentEmployee) {
+                throw new GraphQLError('You must be logged in to perform this action.', {
+                    extensions: { code: 'UNAUTHENTICATED' },
+                });
+            }
+
+            return context.prisma.employee.update({
+                where: { publicId },
+                data: input
+            });
+        },
+    }
 };

@@ -43,6 +43,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   login: AuthPayload;
   signup: AuthPayload;
+  updateEmployee?: Maybe<Employee>;
 };
 
 
@@ -55,8 +56,15 @@ export type MutationSignupArgs = {
   input?: InputMaybe<SignUpInput>;
 };
 
+
+export type MutationUpdateEmployeeArgs = {
+  input: UpdateEmployeeInput;
+  publicId: Scalars['String']['input'];
+};
+
 export type Query = {
   __typename?: 'Query';
+  deleteMe?: Maybe<Employee>;
   getEmployee?: Maybe<Employee>;
   getEmployees?: Maybe<Array<Maybe<Employee>>>;
   me?: Maybe<Employee>;
@@ -71,6 +79,13 @@ export type SignUpInput = {
   Email: Scalars['String']['input'];
   Name: Scalars['String']['input'];
   Password: Scalars['String']['input'];
+};
+
+export type UpdateEmployeeInput = {
+  __typename?: 'UpdateEmployeeInput';
+  Email: Scalars['String']['output'];
+  Name: Scalars['String']['output'];
+  Position?: Maybe<Scalars['String']['output']>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -153,6 +168,7 @@ export type ResolversTypes = ResolversObject<{
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  UpdateEmployeeInput: ResolverTypeWrapper<UpdateEmployeeInput>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -165,6 +181,7 @@ export type ResolversParentTypes = ResolversObject<{
   Query: {};
   SignUpInput: SignUpInput;
   String: Scalars['String']['output'];
+  UpdateEmployeeInput: UpdateEmployeeInput;
 }>;
 
 export type AuthPayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['AuthPayload'] = ResolversParentTypes['AuthPayload']> = ResolversObject<{
@@ -185,12 +202,21 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
+  updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input' | 'publicId'>>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
+}>;
+
+export type UpdateEmployeeInputResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UpdateEmployeeInput'] = ResolversParentTypes['UpdateEmployeeInput']> = ResolversObject<{
+  Email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
@@ -198,5 +224,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Employee?: EmployeeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  UpdateEmployeeInput?: UpdateEmployeeInputResolvers<ContextType>;
 }>;
 
