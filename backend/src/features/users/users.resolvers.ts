@@ -29,5 +29,16 @@ export const usersResolvers: Resolvers = {
                 where: { publicId },
             });
         },
+        me: async (_parent, _args, context) => {
+            // Authorization: Check if a user is logged in via the context.
+            const currentEmployee = context.currentEmployee;
+            if (!currentEmployee) {
+                throw new GraphQLError('You must be logged in to perform this action.', {
+                    extensions: { code: 'UNAUTHENTICATED' },
+                });
+            }
+
+            return context.prisma.employee.findUnique({ where: { publicId: currentEmployee.publicId } });
+        },
     },
 };

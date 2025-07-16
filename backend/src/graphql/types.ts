@@ -59,6 +59,7 @@ export type Query = {
   __typename?: 'Query';
   getEmployee?: Maybe<Employee>;
   getEmployees?: Maybe<Array<Maybe<Employee>>>;
+  me?: Maybe<Employee>;
 };
 
 
@@ -189,6 +190,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
+  me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
