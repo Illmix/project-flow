@@ -1,0 +1,17 @@
+type Skill {
+  Name: String!
+  employees: [Employee!]
+}
+
+input CreateSkillInput {
+  Name: String!
+}
+
+input UpdateSkillInput {
+  Name: String
+}
+
+type Query {
+  getSkills: [Skill!]!
+  getSkill(name: String!): Skill
+}
