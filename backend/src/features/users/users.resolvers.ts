@@ -1,23 +1,5 @@
 import type {Resolvers} from '../../graphql/types.js';
-import {GraphQLError} from 'graphql';
-import {Context} from "../../context.js";
-
-type Resolver = (parent: any, args: any, context: Context, info: any) => any;
-
-const authenticated = (next: Resolver): Resolver => {
-    // Return a new resolver function
-    return (parent, args, context, info) => {
-        // Check for the authenticated user in the context
-        if (!context.currentEmployee) {
-            throw new GraphQLError('You must be logged in to perform this action.', {
-                extensions: { code: 'UNAUTHENTICATED' },
-            });
-        }
-
-        //  If the user is authenticated, call the original resolver.
-        return next(parent, args, context, info);
-    };
-};
+import {authenticated} from "../../lib/permissions.js";
 
 export const usersResolvers: Resolvers = {
     Query: {
