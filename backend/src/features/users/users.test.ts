@@ -15,8 +15,10 @@ const prisma = new PrismaClient();
 const server = new ApolloServer({ typeDefs, resolvers });
 
 describe('User & Auth Resolvers', () => {
+    let token = ""
     beforeAll(async () => {
         await prisma.employee.deleteMany();
+        token = ""
     });
 
     afterAll(async () => {
@@ -65,5 +67,44 @@ describe('User & Auth Resolvers', () => {
         const dbUser = await prisma.employee.findUnique({ where: { Email: 'test@example.com' } });
         expect(dbUser).toBeDefined();
         expect(dbUser?.Name).toBe('Test User');
+    });
+
+    it('should login a new employee and return a token on login', async () => {
+        const contextValue = await buildContext({});
+
+        const response = await server.executeOperation({
+                query: `
+        mutation Login($input: LoginInput!) {
+          login(input: $input) {
+            token
+            employee {
+              publicId
+              Name
+              Email
+            }
+          }
+        }
+      `,
+                variables: {
+                    input: {
+                        Email: 'test@example.com',
+                        Password: 'password123',
+                    },
+                },
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseData = response.body.singleResult.data?.login as AuthPayload;
+
+        expect(responseData.token).toBeDefined();
+
+        token = responseData.token;
     });
 });
