@@ -1,4 +1,5 @@
 type Skill {
+  id: ID!
   Name: String!
   employees: [Employee!]
 }
