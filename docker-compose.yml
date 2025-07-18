@@ -20,9 +20,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TEST}
       POSTGRES_DB: ${POSTGRES_DB_TEST}
     ports:
-      - '6543:6543'
+      - '6543:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_test_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:
+  postgres_test_data:
