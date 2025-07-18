@@ -4,11 +4,13 @@ type Employee {
   Email: String!
   Position: String
   created_at: String!
+
+  skills: [Skill!]
 }
 
 input UpdateEmployeeInput {
-  Name: String!
-  Email: String!
+  Name: String
+  Email: String
   Position: String
 }
 
