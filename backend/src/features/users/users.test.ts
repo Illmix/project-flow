@@ -252,4 +252,32 @@ describe('User & Auth Resolvers', () => {
         expect(updated.Email).toBe('updated@example.com');
         expect(updated.publicId).toBe(employeeData.publicId);
     })
+
+    it('should delete logged in employee', async () => {
+        const contextValue = await buildContext({
+            authorization: 'Bearer ' + employeeData.token,
+        });
+
+        const response = await server.executeOperation({
+                query: `
+        mutation {
+          deleteMe {
+            publicId
+          }
+        }
+      `,
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const deleted = response.body.singleResult.data?.deleteMe as Employee;
+
+        expect(deleted.publicId).toBe(employeeData.publicId);
+    })
 });
