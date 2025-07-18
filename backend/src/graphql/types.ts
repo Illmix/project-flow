@@ -25,6 +25,10 @@ export type AuthPayload = {
   token: Scalars['String']['output'];
 };
 
+export type CreateSkillInput = {
+  Name: Scalars['String']['input'];
+};
+
 export type Employee = {
   __typename?: 'Employee';
   Email: Scalars['String']['output'];
@@ -32,6 +36,7 @@ export type Employee = {
   Position?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['String']['output'];
   publicId: Scalars['String']['output'];
+  skills?: Maybe<Array<Skill>>;
 };
 
 export type LoginInput = {
@@ -67,6 +72,8 @@ export type Query = {
   __typename?: 'Query';
   getEmployee?: Maybe<Employee>;
   getEmployees?: Maybe<Array<Maybe<Employee>>>;
+  getSkill?: Maybe<Skill>;
+  getSkills: Array<Skill>;
   me?: Maybe<Employee>;
 };
 
@@ -75,16 +82,32 @@ export type QueryGetEmployeeArgs = {
   publicId: Scalars['String']['input'];
 };
 
+
+export type QueryGetSkillArgs = {
+  name: Scalars['String']['input'];
+};
+
 export type SignUpInput = {
   Email: Scalars['String']['input'];
   Name: Scalars['String']['input'];
   Password: Scalars['String']['input'];
 };
 
+export type Skill = {
+  __typename?: 'Skill';
+  Name: Scalars['String']['output'];
+  employees?: Maybe<Array<Employee>>;
+  id: Scalars['ID']['output'];
+};
+
 export type UpdateEmployeeInput = {
-  Email: Scalars['String']['input'];
-  Name: Scalars['String']['input'];
+  Email?: InputMaybe<Scalars['String']['input']>;
+  Name?: InputMaybe<Scalars['String']['input']>;
   Position?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateSkillInput = {
+  Name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -161,26 +184,34 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = ResolversObject<{
   AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  CreateSkillInput: CreateSkillInput;
   Employee: ResolverTypeWrapper<PrismaEmployee>;
+  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
+  Skill: ResolverTypeWrapper<Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversTypes['Employee']>> }>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateEmployeeInput: UpdateEmployeeInput;
+  UpdateSkillInput: UpdateSkillInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
   Boolean: Scalars['Boolean']['output'];
+  CreateSkillInput: CreateSkillInput;
   Employee: PrismaEmployee;
+  ID: Scalars['ID']['output'];
   LoginInput: LoginInput;
   Mutation: {};
   Query: {};
   SignUpInput: SignUpInput;
+  Skill: Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversParentTypes['Employee']>> };
   String: Scalars['String']['output'];
   UpdateEmployeeInput: UpdateEmployeeInput;
+  UpdateSkillInput: UpdateSkillInput;
 }>;
 
 export type AuthPayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['AuthPayload'] = ResolversParentTypes['AuthPayload']> = ResolversObject<{
@@ -195,6 +226,7 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
   Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  skills?: Resolver<Maybe<Array<ResolversTypes['Skill']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -208,7 +240,16 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
+  getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'name'>>;
+  getSkills?: Resolver<Array<ResolversTypes['Skill']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
+}>;
+
+export type SkillResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Skill'] = ResolversParentTypes['Skill']> = ResolversObject<{
+  Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  employees?: Resolver<Maybe<Array<ResolversTypes['Employee']>>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
@@ -216,5 +257,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Employee?: EmployeeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Skill?: SkillResolvers<ContextType>;
 }>;
 
