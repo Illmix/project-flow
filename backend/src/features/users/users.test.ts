@@ -2,7 +2,7 @@ import { ApolloServer } from '@apollo/server';
 import { PrismaClient } from '@prisma/client';
 import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
-import {AuthPayload} from "../../graphql/types.js";
+import {AuthPayload, Employee} from "../../graphql/types.js";
 import { createContext } from '../../context.js'
 import {IncomingMessage} from "http";
 
@@ -107,4 +107,38 @@ describe('User & Auth Resolvers', () => {
 
         token = responseData.token;
     });
+
+    it('should get information of logged in user', async () => {
+        const contextValue = await buildContext({
+            authorization: 'Bearer ' + token,
+        });
+        const response = await server.executeOperation(
+            {
+                query: `
+        query GetMe {
+            me {
+              Name
+              Email
+              publicId
+              created_at
+            }
+          }
+        `
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseData = response.body.singleResult.data?.me as Employee;
+
+        expect(responseData.Name).toBe('Test User');
+        expect(responseData.Email).toBe('test@example.com');
+        expect(responseData.publicId).toBeDefined();
+        expect(responseData.created_at).toBeDefined();
+    })
 });
