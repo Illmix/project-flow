@@ -143,4 +143,38 @@ describe('User & Auth Resolvers', () => {
 
         employeeData.publicId = responseData.publicId;
     })
+
+    it('should get all employees', async () => {
+        const contextValue = await buildContext({
+            authorization: 'Bearer ' + employeeData.token,
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+        query GetEmployees {
+            getEmployees {
+              Name
+              Email
+              publicId
+              created_at
+            }
+          }
+        `
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseData = response.body.singleResult.data?.getEmployees as [Employee];
+
+        expect(responseData.length).toBe(1);
+        expect(responseData[0].Name).toBe('Test User');
+        expect(responseData[0].Email).toBe('test@example.com');
+    })
 });
