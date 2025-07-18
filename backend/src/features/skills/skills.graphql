@@ -14,5 +14,5 @@ input UpdateSkillInput {
 
 type Query {
   getSkills: [Skill!]!
-  getSkill(name: String!): Skill
+  getSkill(id: ID!): Skill
 }

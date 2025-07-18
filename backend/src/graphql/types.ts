@@ -84,7 +84,7 @@ export type QueryGetEmployeeArgs = {
 
 
 export type QueryGetSkillArgs = {
-  name: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type SignUpInput = {
@@ -240,7 +240,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
-  getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'name'>>;
+  getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'id'>>;
   getSkills?: Resolver<Array<ResolversTypes['Skill']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
 }>;
