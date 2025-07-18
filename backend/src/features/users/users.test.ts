@@ -177,4 +177,40 @@ describe('User & Auth Resolvers', () => {
         expect(responseData[0].Name).toBe('Test User');
         expect(responseData[0].Email).toBe('test@example.com');
     })
+
+    it('should get one employee by publicId', async () => {
+        const contextValue = await buildContext({
+            authorization: 'Bearer ' + employeeData.token,
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                query GetEmployee($publicId: String!) {
+                    getEmployee(publicId: $publicId) {
+                        Name
+                        Email
+                        publicId
+                        created_at
+                    }
+                }
+            `,
+                variables: {
+                    publicId: employeeData.publicId
+                }
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const employee = response.body.singleResult.data?.getEmployee as Employee;
+
+        expect(employee.Name).toBe('Test User');
+        expect(employee.Email).toBe('test@example.com');
+    });
 });
