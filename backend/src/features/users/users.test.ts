@@ -213,4 +213,43 @@ describe('User & Auth Resolvers', () => {
         expect(employee.Name).toBe('Test User');
         expect(employee.Email).toBe('test@example.com');
     });
+
+    it('should update the employee by publicId', async () => {
+        const contextValue = await buildContext({
+            authorization: 'Bearer ' + employeeData.token,
+        });
+
+        const response = await server.executeOperation({
+                query: `
+        mutation UpdateEmployee($publicId: String!, $input: UpdateEmployeeInput!) {
+          updateEmployee(publicId: $publicId, input: $input) {
+            Name
+            Email
+            publicId
+          }
+        }
+      `,
+                variables: {
+                    publicId: employeeData.publicId,
+                    input: {
+                        Name: 'Updated User',
+                        Email: 'updated@example.com',
+                    },
+                },
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const updated = response.body.singleResult.data?.updateEmployee as Employee;
+
+        expect(updated.Name).toBe('Updated User');
+        expect(updated.Email).toBe('updated@example.com');
+        expect(updated.publicId).toBe(employeeData.publicId);
+    })
 });
