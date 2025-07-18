@@ -3,13 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import {AuthPayload, Employee} from "../../graphql/types.js";
-import { createContext } from '../../context.js'
-import {IncomingMessage} from "http";
-
-const buildContext = async (headers?: IncomingMessage['headers']) => {
-    const req = { headers } as IncomingMessage;
-    return await createContext({ req });
-};
+import {buildContext} from "../../lib/testContext.js";
 
 const prisma = new PrismaClient();
 const server = new ApolloServer({ typeDefs, resolvers });
