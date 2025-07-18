@@ -15,10 +15,10 @@ const prisma = new PrismaClient();
 const server = new ApolloServer({ typeDefs, resolvers });
 
 describe('User & Auth Resolvers', () => {
-    let token = ""
+    let employeeData = {token: "", publicId: ""}
     beforeAll(async () => {
         await prisma.employee.deleteMany();
-        token = ""
+        employeeData = {token: "", publicId: ""}
     });
 
     afterAll(async () => {
@@ -105,12 +105,12 @@ describe('User & Auth Resolvers', () => {
 
         expect(responseData.token).toBeDefined();
 
-        token = responseData.token;
+        employeeData.token = responseData.token;
     });
 
-    it('should get information of logged in user', async () => {
+    it('should get information of logged in user and return his publicId', async () => {
         const contextValue = await buildContext({
-            authorization: 'Bearer ' + token,
+            authorization: 'Bearer ' + employeeData.token,
         });
         const response = await server.executeOperation(
             {
@@ -140,5 +140,7 @@ describe('User & Auth Resolvers', () => {
         expect(responseData.Email).toBe('test@example.com');
         expect(responseData.publicId).toBeDefined();
         expect(responseData.created_at).toBeDefined();
+
+        employeeData.publicId = responseData.publicId;
     })
 });
