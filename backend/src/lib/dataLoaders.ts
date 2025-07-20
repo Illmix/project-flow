@@ -70,7 +70,7 @@ const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaCl
  */
 export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
     return {
-        employeeSkills: new DataLoader((keys: readonly number[]) =>
+        employeeSkills: new DataLoader<number, Skill[]>((keys) =>
             batchSkillsForEmployees(keys, prisma)
         ),
         skillEmployees: new DataLoader<number, Employee[]>((keys) =>
