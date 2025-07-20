@@ -1,4 +1,7 @@
 # This file defines the root entry points for the API.
+
+scalar DateTime
+
 type Query {
   _empty: String
 }
