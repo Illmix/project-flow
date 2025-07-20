@@ -69,9 +69,7 @@ describe('Skill Resolvers', () => {
             fail('Expected single result, but got incremental response.');
         }
 
-        const deleted = response.body.singleResult.data?.deleteSkill as Skill;
-
         const dbSkill = await prisma.skill.findFirst({ where: { Name: 'TypeScript' } });
-        expect(dbSkill).toBeDefined();
+        expect(dbSkill).toBe(null);
     })
 });
