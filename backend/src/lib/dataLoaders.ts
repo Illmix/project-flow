@@ -3,8 +3,8 @@ import type {Employee, PrismaClient, Skill} from '@prisma/client';
 import lodash from 'lodash';
 
 export interface IDataLoaders {
-    employeeSkills: DataLoader<number, Skill[]>;
-    skillEmployees: DataLoader<number, Skill[]>;
+    employeeSkills: DataLoader<string, Skill[]>;
+    skillEmployees: DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>;
 }
 
 /**
@@ -16,7 +16,7 @@ export interface IDataLoaders {
  * @returns An array of item arrays, ordered by the input keys.
  */
 const mapToKeys = <T extends { [key: string]: any }>(
-    keys: readonly number[],
+    keys: readonly string[],
     items: T[],
     keyField: keyof T
 ) => {
@@ -26,39 +26,51 @@ const mapToKeys = <T extends { [key: string]: any }>(
 /**
  * @description Batch function to get skills for many employees.
  */
-const batchSkillsForEmployees = async (keys: readonly number[], prisma: PrismaClient) => {
+const batchSkillsForEmployees = async (keys: readonly string[], prisma: PrismaClient) => {
     const employeeSkills = await prisma.employee.findMany({
-        where: { id: { in: [...keys] } },
+        where: { publicId: { in: [...keys] } },
         select: {
-            id: true,
+            publicId: true,
             skills: true,
         },
     });
 
     // Flatten the result to make it easier to group
     const skillsWithEmployeeId = employeeSkills.flatMap(emp =>
-        emp.skills.map(skill => ({ ...skill, employeeId: emp.id }))
+        emp.skills.map(skill => ({ ...skill, employeeId: emp.publicId }))
     );
 
     return mapToKeys(keys, skillsWithEmployeeId, 'employeeId');
 };
 
 /**
+ * @description A simple "assembler" to convert a full Prisma Employee
+ * into a safe, public-facing Employee object for GraphQL.
+ */
+const toPublicEmployee = (employee: Employee): Omit<Employee, 'id' | 'Password'> => {
+    return {
+        publicId: employee.publicId,
+        Name: employee.Name,
+        Email: employee.Email,
+        Position: employee.Position,
+        created_at: employee.created_at,
+    };
+};
+
+
+/**
  * @description Batch function to get employees for many skills.
  */
-const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaClient): Promise<Employee[][]> => {
+const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaClient) => {
     const skills = await prisma.skill.findMany({
-        where: {
-            id: { in: [...keys] }
-        },
-        include: {
-            employees: true,
-        },
+        where: { id: { in: [...keys] } },
+        include: { employees: true },
     });
 
-    const employeeMap = new Map<number, Employee[]>();
+    const employeeMap = new Map<number, Omit<Employee, 'id' | 'Password'>[]>();
     skills.forEach(skill => {
-        employeeMap.set(skill.id, skill.employees);
+        const publicEmployees = skill.employees.map(toPublicEmployee);
+        employeeMap.set(skill.id, publicEmployees);
     });
 
     return keys.map(key => employeeMap.get(key) || []);
@@ -70,10 +82,10 @@ const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaCl
  */
 export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
     return {
-        employeeSkills: new DataLoader<number, Skill[]>((keys) =>
+        employeeSkills: new DataLoader<string, Skill[]>((keys) =>
             batchSkillsForEmployees(keys, prisma)
         ),
-        skillEmployees: new DataLoader<number, Employee[]>((keys) =>
+        skillEmployees: new DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>((keys) =>
             batchEmployeesForSkills(keys, prisma)
         ),
     };
