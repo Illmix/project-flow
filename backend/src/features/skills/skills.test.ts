@@ -45,8 +45,6 @@ describe('Skill Resolvers', () => {
             fail('Expected single result');
         }
 
-        console.log(response.body.singleResult)
-
         const responseData = response.body.singleResult.data?.createSkill as Skill;
         expect(responseData.Name).toBe('TypeScript');
 

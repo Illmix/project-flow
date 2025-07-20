@@ -1,6 +1,6 @@
 import DataLoader from 'dataloader';
 import type {Employee, PrismaClient, Skill} from '@prisma/client';
-import { groupBy } from 'lodash';
+import lodash from 'lodash';
 
 export interface IDataLoaders {
     employeeSkills: DataLoader<number, Skill[]>;
@@ -20,7 +20,7 @@ const mapToKeys = <T extends { [key: string]: any }>(
     items: T[],
     keyField: keyof T
 ) => {
-    const grouped = groupBy(items, keyField);
+    const grouped = lodash.groupBy(items, keyField);
     return keys.map((key) => grouped[key] || []);
 };
 /**
