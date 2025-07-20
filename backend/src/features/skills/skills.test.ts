@@ -173,7 +173,9 @@ describe('Skill Resolvers', () => {
                 query GetSkill($id: Int!) {
                     getSkill(id: $id) {
                         Name
-                        employees
+                        employees {
+                            Name
+                        }
                     }
                 }
             `,
