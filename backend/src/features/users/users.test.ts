@@ -244,6 +244,9 @@ describe('User & Auth Resolvers', () => {
         expect(updated.Name).toBe('Updated User');
         expect(updated.Email).toBe('updated@example.com');
         expect(updated.publicId).toBe(contextValue.currentEmployee?.publicId);
+
+        const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
+        expect(dbUser?.Name).toBe('Updated User');
     })
 
     it('should delete logged in employee', async () => {
@@ -267,8 +270,7 @@ describe('User & Auth Resolvers', () => {
             fail('Expected single result, but got incremental response.');
         }
 
-        const deleted = response.body.singleResult.data?.deleteMe as Employee;
-
-        expect(deleted.publicId).toBe(contextValue.currentEmployee?.publicId);
+        const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
+        expect(dbUser).toBe(null);
     })
 });
