@@ -150,4 +150,53 @@ describe('Skill Resolvers', () => {
 
         expect(responseData.Name).toBe('Typescript');
     })
+    it('should allow an authenticated user to get skill employees', async () => {
+        const { context: contextValue, employee: testEmployee } = await createAuthenticatedContext(prisma);
+        const newSkill = await contextValue.prisma.skill.create({
+            data: {
+                Name: 'Typescript',
+            },
+        });
+
+        await prisma.skill.update({
+            where: { id: newSkill.id },
+            data: {
+                employees: {
+                    connect: [{ id: testEmployee.id }],
+                },
+            },
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                query GetSkill($id: Int!) {
+                    getSkill(id: $id) {
+                        Name
+                        employees
+                    }
+                }
+            `,
+                variables: {
+                    id: newSkill.id
+                }
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseData = response.body.singleResult.data?.getSkill as Skill;
+
+        expect(responseData.employees).toHaveLength(1);
+        expect(responseData.employees).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'Test User' }),
+            ])
+        );
+    })
 });
