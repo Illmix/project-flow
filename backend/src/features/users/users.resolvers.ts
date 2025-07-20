@@ -53,7 +53,7 @@ export const usersResolvers: Resolvers = {
     },
     Employee: {
         skills: (parent, _args, context) => {
-            return context.loaders.employeeSkills.load(parent.id);
+            return context.loaders.employeeSkills.load(parent.publicId);
         },
     },
 };
