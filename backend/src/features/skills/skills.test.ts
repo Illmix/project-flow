@@ -49,6 +49,11 @@ describe('Skill Resolvers', () => {
 
     it('should allow an authenticated user to delete a skill', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
+        await prisma.skill.create({
+            data: {
+                Name: 'Typescript',
+            },
+        });
 
         const response = await server.executeOperation({
                 query: `
