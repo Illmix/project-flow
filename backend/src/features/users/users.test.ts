@@ -3,16 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import {AuthPayload, Employee} from "../../graphql/types.js";
-import {buildContext} from "../../lib/testContext.js";
+import {createAuthenticatedContext} from "../../tests/helpers.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 const server = new ApolloServer({ typeDefs, resolvers });
 
 describe('User & Auth Resolvers', () => {
-    let employeeData = {token: "", publicId: ""}
-    beforeAll(async () => {
+    beforeEach(async () => {
         await prisma.employee.deleteMany();
-        employeeData = {token: "", publicId: ""}
     });
 
     afterAll(async () => {
@@ -20,7 +20,7 @@ describe('User & Auth Resolvers', () => {
     });
 
     it('should create a new employee and return a token on signup', async () => {
-        const contextValue = await buildContext({});
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
         const response = await server.executeOperation({
                 query: `
         mutation Signup($input: SignUpInput!) {
@@ -64,48 +64,55 @@ describe('User & Auth Resolvers', () => {
     });
 
     it('should login a new employee and return a token on login', async () => {
-        const contextValue = await buildContext({});
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        const testEmployee = await prisma.employee.create({
+            data: {
+                Name: 'Login User',
+                Email: 'login@example.com',
+                Password: hashedPassword,
+                publicId: 'login-test-uuid',
+            },
+        });
 
         const response = await server.executeOperation({
-                query: `
+            query: `
         mutation Login($input: LoginInput!) {
           login(input: $input) {
             token
             employee {
               publicId
-              Name
               Email
             }
           }
         }
       `,
-                variables: {
-                    input: {
-                        Email: 'test@example.com',
-                        Password: 'password123',
-                    },
+            variables: {
+                input: {
+                    Email: 'login@example.com',
+                    Password: 'password123',
                 },
             },
+        },
             {
-                contextValue
+                contextValue: {prisma}
             }
         );
 
         if (response.body.kind !== 'single') {
-            fail('Expected single result, but got incremental response.');
+            fail('Expected single result');
         }
-
         const responseData = response.body.singleResult.data?.login as AuthPayload;
 
         expect(responseData.token).toBeDefined();
+        expect(typeof responseData.token).toBe('string');
+        expect(responseData.employee.Email).toBe('login@example.com');
 
-        employeeData.token = responseData.token;
+        const decodedToken = jwt.verify(responseData.token, process.env.JWT_SECRET!) as { userId: number };
+        expect(decodedToken.userId).toBe(testEmployee.id);
     });
 
     it('should get information of logged in user and return his publicId', async () => {
-        const contextValue = await buildContext({
-            authorization: 'Bearer ' + employeeData.token,
-        });
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
         const response = await server.executeOperation(
             {
                 query: `
@@ -130,18 +137,14 @@ describe('User & Auth Resolvers', () => {
 
         const responseData = response.body.singleResult.data?.me as Employee;
 
-        expect(responseData.Name).toBe('Test User');
-        expect(responseData.Email).toBe('test@example.com');
+        expect(responseData.Name).toBe(contextValue.currentEmployee?.Name);
+        expect(responseData.Email).toBe(contextValue.currentEmployee?.Email);
         expect(responseData.publicId).toBeDefined();
         expect(responseData.created_at).toBeDefined();
-
-        employeeData.publicId = responseData.publicId;
     })
 
     it('should get all employees', async () => {
-        const contextValue = await buildContext({
-            authorization: 'Bearer ' + employeeData.token,
-        });
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const response = await server.executeOperation(
             {
@@ -168,14 +171,12 @@ describe('User & Auth Resolvers', () => {
         const responseData = response.body.singleResult.data?.getEmployees as [Employee];
 
         expect(responseData.length).toBe(1);
-        expect(responseData[0].Name).toBe('Test User');
-        expect(responseData[0].Email).toBe('test@example.com');
+        expect(responseData[0].Name).toBe(contextValue.currentEmployee?.Name);
+        expect(responseData[0].Email).toBe(contextValue.currentEmployee?.Email);
     })
 
     it('should get one employee by publicId', async () => {
-        const contextValue = await buildContext({
-            authorization: 'Bearer ' + employeeData.token,
-        });
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const response = await server.executeOperation(
             {
@@ -190,7 +191,7 @@ describe('User & Auth Resolvers', () => {
                 }
             `,
                 variables: {
-                    publicId: employeeData.publicId
+                    publicId: contextValue.currentEmployee?.publicId
                 }
             },
             {
@@ -204,14 +205,12 @@ describe('User & Auth Resolvers', () => {
 
         const employee = response.body.singleResult.data?.getEmployee as Employee;
 
-        expect(employee.Name).toBe('Test User');
-        expect(employee.Email).toBe('test@example.com');
+        expect(employee.Name).toBe(contextValue.currentEmployee?.Name);
+        expect(employee.Email).toBe(contextValue.currentEmployee?.Email);
     });
 
     it('should update the employee by publicId', async () => {
-        const contextValue = await buildContext({
-            authorization: 'Bearer ' + employeeData.token,
-        });
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const response = await server.executeOperation({
                 query: `
@@ -224,7 +223,7 @@ describe('User & Auth Resolvers', () => {
         }
       `,
                 variables: {
-                    publicId: employeeData.publicId,
+                    publicId: contextValue.currentEmployee?.publicId,
                     input: {
                         Name: 'Updated User',
                         Email: 'updated@example.com',
@@ -244,13 +243,11 @@ describe('User & Auth Resolvers', () => {
 
         expect(updated.Name).toBe('Updated User');
         expect(updated.Email).toBe('updated@example.com');
-        expect(updated.publicId).toBe(employeeData.publicId);
+        expect(updated.publicId).toBe(contextValue.currentEmployee?.publicId);
     })
 
     it('should delete logged in employee', async () => {
-        const contextValue = await buildContext({
-            authorization: 'Bearer ' + employeeData.token,
-        });
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const response = await server.executeOperation({
                 query: `
@@ -272,6 +269,6 @@ describe('User & Auth Resolvers', () => {
 
         const deleted = response.body.singleResult.data?.deleteMe as Employee;
 
-        expect(deleted.publicId).toBe(employeeData.publicId);
+        expect(deleted.publicId).toBe(contextValue.currentEmployee?.publicId);
     })
 });

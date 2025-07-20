@@ -5,7 +5,6 @@ import { GraphQLError } from 'graphql';
 import type { Resolvers } from '../../graphql/types.js';
 import type { Context } from '../../context.js';
 
-// Get the JWT secret from environment variables.
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
     throw new Error('FATAL ERROR: JWT_SECRET is not defined in environment variables.');
@@ -82,7 +81,6 @@ export const authResolvers: Resolvers = {
                 expiresIn: '7d',
             });
 
-            // 4. Return the token and employee data.
             return {
                 token,
                 employee,
