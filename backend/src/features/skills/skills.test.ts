@@ -74,7 +74,7 @@ describe('Skill Resolvers', () => {
             fail('Expected single result, but got incremental response.');
         }
 
-        const dbSkill = await prisma.skill.findFirst({ where: { Name: 'TypeScript' } });
+        const dbSkill = await prisma.skill.findFirst({ where: { Name: 'Typescript' } });
         expect(dbSkill).toBe(null);
     })
 
