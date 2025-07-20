@@ -4,6 +4,7 @@ import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import { createAuthenticatedContext } from '../../tests/helpers.js';
 import type { Context } from '../../context.js';
+import {Skill} from "../../graphql/types.js";
 
 const prisma = new PrismaClient();
 const server = new ApolloServer<Context>({ typeDefs, resolvers });
@@ -39,10 +40,38 @@ describe('Skill Resolvers', () => {
         if (response.body.kind !== 'single') {
             fail('Expected single result');
         }
-        const responseData = response.body.singleResult.data?.createSkill as any;
+        const responseData = response.body.singleResult.data?.createSkill as Skill;
         expect(responseData.Name).toBe('TypeScript');
 
         const dbSkill = await prisma.skill.findFirst({ where: { Name: 'TypeScript' } });
         expect(dbSkill).toBeDefined();
     });
+
+    it('should allow an authenticated user to delete a skill', async () => {
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
+
+        const response = await server.executeOperation({
+                query: `
+        mutation DeleteSkill($id: ID!)  {
+          deleteSkill(id: $id) {
+            Name
+          }
+        }
+      `,
+                variables: { name: 'TypeScript' },
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const deleted = response.body.singleResult.data?.deleteSkill as Skill;
+
+        const dbSkill = await prisma.skill.findFirst({ where: { Name: 'TypeScript' } });
+        expect(dbSkill).toBeDefined();
+    })
 });
