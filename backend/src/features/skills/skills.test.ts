@@ -4,7 +4,7 @@ import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import { createAuthenticatedContext } from '../../tests/helpers.js';
 import type { Context } from '../../context.js';
-import {Employee, Skill} from "../../graphql/types.js";
+import {Skill} from "../../graphql/types.js";
 
 const prisma = new PrismaClient();
 const server = new ApolloServer<Context>({ typeDefs, resolvers });
@@ -92,7 +92,6 @@ describe('Skill Resolvers', () => {
         query GetSkills {
             getSkills {
               Name
-              id
             }
           }
         `
@@ -110,5 +109,40 @@ describe('Skill Resolvers', () => {
 
         expect(responseData.length).toBe(1);
         expect(responseData[0].Name).toBe('Typescript');
+    })
+
+    it('should allow an authenticated user get one skill', async () => {
+        const { context: contextValue } = await createAuthenticatedContext(prisma);
+        const newSkill = await contextValue.prisma.skill.create({
+            data: {
+                Name: 'Typescript',
+            },
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                query GetSkill($id: ID!) {
+                    getSkill(id: $id) {
+                        Name
+                    }
+                }
+            `,
+                variables: {
+                    id: newSkill.id
+                }
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseData = response.body.singleResult.data?.getSkill as Skill;
+
+        expect(responseData.Name).toBe('Typescript');
     })
 });
