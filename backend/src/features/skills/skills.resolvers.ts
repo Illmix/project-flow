@@ -17,5 +17,13 @@ export const skillsResolvers: Resolvers = {
                 where: { id },
             });
         }),
-    }
+    },
+    Mutation: {
+        createSkill: authenticated(async (_parent, {input}, context) => {
+            return context.prisma.skill.create({ data: input });
+        }),
+        deleteSkill: authenticated(async (_parent, {id}, context) => {
+            return context.prisma.skill.delete({ where: { id } });
+        }),
+    },
 }
