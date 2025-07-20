@@ -25,14 +25,18 @@ describe('Skill Resolvers', () => {
         const response = await server.executeOperation(
             {
                 query: `
-          mutation CreateSkill($name: String!) {
-            createSkill(name: $name) {
+          mutation CreateSkill($input: CreateSkillInput!) {
+            createSkill(input: $input) {
               id
               Name
             }
           }
         `,
-                variables: { name: 'TypeScript' },
+                variables: {
+                    input: {
+                        Name: "TypeScript"
+                    }
+                },
             },
             { contextValue }
         );
@@ -40,6 +44,9 @@ describe('Skill Resolvers', () => {
         if (response.body.kind !== 'single') {
             fail('Expected single result');
         }
+
+        console.log(response.body.singleResult)
+
         const responseData = response.body.singleResult.data?.createSkill as Skill;
         expect(responseData.Name).toBe('TypeScript');
 
@@ -49,7 +56,7 @@ describe('Skill Resolvers', () => {
 
     it('should allow an authenticated user to delete a skill', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
-        await contextValue.prisma.skill.create({
+        const newSkill = await contextValue.prisma.skill.create({
             data: {
                 Name: 'Typescript',
             },
@@ -57,13 +64,13 @@ describe('Skill Resolvers', () => {
 
         const response = await server.executeOperation({
                 query: `
-        mutation DeleteSkill($id: ID!)  {
+        mutation DeleteSkill($id: Int!)  {
           deleteSkill(id: $id) {
             Name
           }
         }
       `,
-                variables: { name: 'Typescript' },
+                variables: { id: newSkill.id },
             },
             {
                 contextValue
