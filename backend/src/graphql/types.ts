@@ -46,10 +46,23 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createSkill: Skill;
   deleteMe?: Maybe<Employee>;
+  deleteSkill: Skill;
   login: AuthPayload;
   signup: AuthPayload;
   updateEmployee?: Maybe<Employee>;
+  updateSkill: Skill;
+};
+
+
+export type MutationCreateSkillArgs = {
+  input: CreateSkillInput;
+};
+
+
+export type MutationDeleteSkillArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -66,6 +79,12 @@ export type MutationSignupArgs = {
 export type MutationUpdateEmployeeArgs = {
   input: UpdateEmployeeInput;
   publicId: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateSkillArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSkillInput;
 };
 
 export type Query = {
@@ -231,10 +250,13 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  createSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationCreateSkillArgs, 'input'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
+  deleteSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationDeleteSkillArgs, 'id'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
   updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input' | 'publicId'>>;
+  updateSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationUpdateSkillArgs, 'id' | 'input'>>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
