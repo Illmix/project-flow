@@ -63,7 +63,7 @@ describe('Skill Resolvers', () => {
           }
         }
       `,
-                variables: { name: 'TypeScript' },
+                variables: { name: 'Typescript' },
             },
             {
                 contextValue
