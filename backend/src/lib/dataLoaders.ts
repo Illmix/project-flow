@@ -1,6 +1,11 @@
 import DataLoader from 'dataloader';
-import type { PrismaClient } from '@prisma/client';
+import type {Employee, PrismaClient, Skill} from '@prisma/client';
 import { groupBy } from 'lodash';
+
+export interface IDataLoaders {
+    employeeSkills: DataLoader<number, Skill[]>;
+    skillEmployees: DataLoader<number, Skill[]>;
+}
 
 /**
  * @description Generic helper to map an array of items to an array of keys,
@@ -18,7 +23,9 @@ const mapToKeys = <T extends { [key: string]: any }>(
     const grouped = groupBy(items, keyField);
     return keys.map((key) => grouped[key] || []);
 };
-
+/**
+ * @description Batch function to get skills for many employees.
+ */
 const batchSkillsForEmployees = async (keys: readonly number[], prisma: PrismaClient) => {
     const employeeSkills = await prisma.employee.findMany({
         where: { id: { in: [...keys] } },
@@ -37,13 +44,37 @@ const batchSkillsForEmployees = async (keys: readonly number[], prisma: PrismaCl
 };
 
 /**
+ * @description Batch function to get employees for many skills.
+ */
+const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaClient): Promise<Employee[][]> => {
+    const skills = await prisma.skill.findMany({
+        where: {
+            id: { in: [...keys] }
+        },
+        include: {
+            employees: true,
+        },
+    });
+
+    const employeeMap = new Map<number, Employee[]>();
+    skills.forEach(skill => {
+        employeeMap.set(skill.id, skill.employees);
+    });
+
+    return keys.map(key => employeeMap.get(key) || []);
+}
+
+/**
  * @description Factory function to create new DataLoader instances for each request.
  * This ensures that caching is done on a per-request basis.
  */
-export const createDataLoaders = (prisma: PrismaClient) => {
+export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
     return {
         employeeSkills: new DataLoader((keys: readonly number[]) =>
             batchSkillsForEmployees(keys, prisma)
+        ),
+        skillEmployees: new DataLoader<number, Employee[]>((keys) =>
+            batchEmployeesForSkills(keys, prisma)
         ),
     };
 };
