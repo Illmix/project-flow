@@ -1,5 +1,5 @@
 type Skill {
-  id: ID!
+  id: Int!
   Name: String!
   employees: [Employee!]
 }
@@ -14,11 +14,11 @@ input UpdateSkillInput {
 
 type Query {
   getSkills: [Skill!]!
-  getSkill(id: ID!): Skill
+  getSkill(id: Int!): Skill
 }
 
 type Mutation {
   createSkill(input: CreateSkillInput!): Skill!
-  updateSkill(id: ID!, input: UpdateSkillInput!): Skill!
-  deleteSkill(id: ID!): Skill!
+  updateSkill(id: Int!, input: UpdateSkillInput!): Skill!
+  deleteSkill(id: Int!): Skill!
 }

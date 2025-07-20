@@ -122,7 +122,7 @@ describe('Skill Resolvers', () => {
         const response = await server.executeOperation(
             {
                 query: `
-                query GetSkill($id: ID!) {
+                query GetSkill($id: Int!) {
                     getSkill(id: $id) {
                         Name
                     }

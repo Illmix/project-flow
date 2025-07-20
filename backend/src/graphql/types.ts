@@ -62,7 +62,7 @@ export type MutationCreateSkillArgs = {
 
 
 export type MutationDeleteSkillArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['Int']['input'];
 };
 
 
@@ -83,7 +83,7 @@ export type MutationUpdateEmployeeArgs = {
 
 
 export type MutationUpdateSkillArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['Int']['input'];
   input: UpdateSkillInput;
 };
 
@@ -103,7 +103,7 @@ export type QueryGetEmployeeArgs = {
 
 
 export type QueryGetSkillArgs = {
-  id: Scalars['ID']['input'];
+  id: Scalars['Int']['input'];
 };
 
 export type SignUpInput = {
@@ -116,7 +116,7 @@ export type Skill = {
   __typename?: 'Skill';
   Name: Scalars['String']['output'];
   employees?: Maybe<Array<Employee>>;
-  id: Scalars['ID']['output'];
+  id: Scalars['Int']['output'];
 };
 
 export type UpdateEmployeeInput = {
@@ -205,7 +205,7 @@ export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateSkillInput: CreateSkillInput;
   Employee: ResolverTypeWrapper<PrismaEmployee>;
-  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
@@ -222,7 +222,7 @@ export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
   CreateSkillInput: CreateSkillInput;
   Employee: PrismaEmployee;
-  ID: Scalars['ID']['output'];
+  Int: Scalars['Int']['output'];
   LoginInput: LoginInput;
   Mutation: {};
   Query: {};
@@ -270,7 +270,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 export type SkillResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Skill'] = ResolversParentTypes['Skill']> = ResolversObject<{
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   employees?: Resolver<Maybe<Array<ResolversTypes['Employee']>>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
