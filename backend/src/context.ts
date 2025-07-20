@@ -1,6 +1,7 @@
 import { IncomingMessage } from 'http';
 import {Employee, PrismaClient} from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import {createDataLoaders} from "./lib/dataLoaders.js";
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,7 @@ const prisma = new PrismaClient();
 export interface Context {
     prisma: PrismaClient;
     currentEmployee: Employee | null;
+    loaders: ReturnType<typeof createDataLoaders>;
 }
 
 /**
@@ -41,6 +43,7 @@ export const createContext = async ({ req }: { req: IncomingMessage }): Promise<
 
     return {
         prisma,
-        currentEmployee
+        currentEmployee,
+        loaders: createDataLoaders(prisma),
     };
 };

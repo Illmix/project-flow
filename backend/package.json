@@ -18,10 +18,11 @@
     "@prisma/client": "^6.11.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "dataloader": "^2.2.3",
     "glob": "^11.0.3",
     "graphql": "^16.11.0",
     "jsonwebtoken": "^9.0.2",
-    "loadsh": "^0.0.4",
+    "lodash": "^4.17.21",
     "nodemon": "^3.1.10"
   },
   "devDependencies": {
@@ -31,6 +32,7 @@
     "@types/glob": "^8.1.0",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.20",
     "dotenv": "^17.2.0",
     "dotenv-cli": "^8.0.0",
     "jest": "^30.0.4",
