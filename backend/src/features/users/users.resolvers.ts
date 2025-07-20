@@ -50,5 +50,10 @@ export const usersResolvers: Resolvers = {
 
             return context.prisma.employee.delete({ where: { publicId: currentEmployee.publicId } });
         }),
-    }
+    },
+    Employee: {
+        skills: (parent, _args, context) => {
+            return context.loaders.employeeSkills.load(parent.id);
+        },
+    },
 };
