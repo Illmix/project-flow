@@ -19,5 +19,4 @@ type Query {
 
 type Mutation {
   createSkill(input: CreateSkillInput!): Skill!
-  deleteSkill(id: Int!): Skill!
 }

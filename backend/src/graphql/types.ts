@@ -48,7 +48,6 @@ export type Mutation = {
   _empty?: Maybe<Scalars['String']['output']>;
   createSkill: Skill;
   deleteMe?: Maybe<Employee>;
-  deleteSkill: Skill;
   login: AuthPayload;
   signup: AuthPayload;
   updateEmployee?: Maybe<Employee>;
@@ -57,11 +56,6 @@ export type Mutation = {
 
 export type MutationCreateSkillArgs = {
   input: CreateSkillInput;
-};
-
-
-export type MutationDeleteSkillArgs = {
-  id: Scalars['Int']['input'];
 };
 
 
@@ -254,7 +248,6 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationCreateSkillArgs, 'input'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
-  deleteSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationDeleteSkillArgs, 'id'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
   updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input' | 'publicId'>>;

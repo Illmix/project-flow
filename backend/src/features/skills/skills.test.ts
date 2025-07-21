@@ -52,37 +52,6 @@ describe('Skill Resolvers', () => {
         expect(dbSkill).toBeDefined();
     });
 
-    it('should allow an authenticated user to delete a skill', async () => {
-        const { context: contextValue } = await createAuthenticatedContext(prisma);
-        const newSkill = await contextValue.prisma.skill.create({
-            data: {
-                Name: 'Typescript',
-            },
-        });
-
-        const response = await server.executeOperation({
-                query: `
-        mutation DeleteSkill($id: Int!)  {
-          deleteSkill(id: $id) {
-            Name
-          }
-        }
-      `,
-                variables: { id: newSkill.id },
-            },
-            {
-                contextValue
-            }
-        );
-
-        if (response.body.kind !== 'single') {
-            fail('Expected single result, but got incremental response.');
-        }
-
-        const dbSkill = await prisma.skill.findFirst({ where: { Name: 'Typescript' } });
-        expect(dbSkill).toBe(null);
-    })
-
     it('should allow an authenticated user get all skills', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
         await contextValue.prisma.skill.create({
