@@ -33,6 +33,7 @@ export type Employee = {
   Email: Scalars['String']['output'];
   Name: Scalars['String']['output'];
   Position?: Maybe<Scalars['String']['output']>;
+  capacity_hours_per_week: Scalars['Int']['output'];
   created_at: Scalars['DateTime']['output'];
   publicId: Scalars['String']['output'];
   skills?: Maybe<Array<Skill>>;
@@ -237,6 +238,7 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
   Email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  capacity_hours_per_week?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   skills?: Resolver<Maybe<Array<ResolversTypes['Skill']>>, ParentType, ContextType>;
