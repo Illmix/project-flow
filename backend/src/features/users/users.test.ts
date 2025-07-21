@@ -13,6 +13,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 describe('User & Auth Resolvers', () => {
     beforeEach(async () => {
         await prisma.employee.deleteMany();
+        await prisma.skill.deleteMany();
     });
 
     afterAll(async () => {
@@ -212,6 +213,9 @@ describe('User & Auth Resolvers', () => {
     it('should update the employee by publicId', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
 
+        const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
+        const nodeSkill = await prisma.skill.create({ data: { Name: 'Node.js' } });
+
         const response = await server.executeOperation({
                 query: `
         mutation UpdateEmployee($publicId: String!, $input: UpdateEmployeeInput!) {
@@ -219,6 +223,9 @@ describe('User & Auth Resolvers', () => {
             Name
             Email
             publicId
+            skills {
+                Name
+            }
           }
         }
       `,
@@ -227,6 +234,7 @@ describe('User & Auth Resolvers', () => {
                     input: {
                         Name: 'Updated User',
                         Email: 'updated@example.com',
+                        skillIds: [nodeSkill.id, reactSkill.id]
                     },
                 },
             },
@@ -244,6 +252,12 @@ describe('User & Auth Resolvers', () => {
         expect(updated.Name).toBe('Updated User');
         expect(updated.Email).toBe('updated@example.com');
         expect(updated.publicId).toBe(contextValue.currentEmployee?.publicId);
+        expect(updated.skills).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'React' }),
+                expect.objectContaining({ Name: 'Node.js' }),
+            ])
+        );
 
         const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
         expect(dbUser?.Name).toBe('Updated User');
