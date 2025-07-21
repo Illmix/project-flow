@@ -71,7 +71,6 @@ export type MutationSignupArgs = {
 
 export type MutationUpdateEmployeeArgs = {
   input: UpdateEmployeeInput;
-  publicId: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -250,7 +249,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
-  updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input' | 'publicId'>>;
+  updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input'>>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{

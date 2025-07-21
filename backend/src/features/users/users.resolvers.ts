@@ -33,7 +33,11 @@ export const usersResolvers: Resolvers = {
         /**
          * @description Updates selected employee
          */
-        updateEmployee: authenticated(async (_parent, {publicId, input}, context) => {
+        updateEmployee: authenticated(async (_parent, {input}, context) => {
+            const currentEmployee = context.currentEmployee;
+
+            if (!currentEmployee) return null
+
             const { skillIds, ...otherData } = input;
             const dataToUpdate: Prisma.EmployeeUpdateInput = {
                 ...otherData,
@@ -44,7 +48,7 @@ export const usersResolvers: Resolvers = {
                 };
             }
             return context.prisma.employee.update({
-                where: { publicId },
+                where: { publicId: currentEmployee.publicId },
                 data: dataToUpdate
             });
         }),

@@ -22,6 +22,6 @@ type Query {
 }
 
 type Mutation {
-  updateEmployee(publicId: String!, input: UpdateEmployeeInput!): Employee
+  updateEmployee(input: UpdateEmployeeInput!): Employee
   deleteMe: Employee
 }
