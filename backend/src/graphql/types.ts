@@ -117,6 +117,7 @@ export type UpdateEmployeeInput = {
   Email?: InputMaybe<Scalars['String']['input']>;
   Name?: InputMaybe<Scalars['String']['input']>;
   Position?: InputMaybe<Scalars['String']['input']>;
+  skillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
 export type UpdateSkillInput = {

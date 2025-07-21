@@ -12,6 +12,7 @@ input UpdateEmployeeInput {
   Name: String
   Email: String
   Position: String
+  skillIds: [Int!]
 }
 
 type Query {
