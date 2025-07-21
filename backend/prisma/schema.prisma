@@ -25,6 +25,8 @@ model Employee {
   Position   String?
   created_at DateTime @default(now())
 
+  capacity_hours_per_week Int @default(40)
+
   assignedTasks Task[]
 
   // Many-to-many rel: one employee can have many skills
