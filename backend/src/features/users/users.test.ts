@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
-import {PrismaClient, Skill} from '@prisma/client';
+import {PrismaClient} from '@prisma/client';
+import {Skill} from "../../graphql/types.js";
 import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import {AuthPayload, Employee} from "../../graphql/types.js";
@@ -210,7 +211,7 @@ describe('User & Auth Resolvers', () => {
         expect(employee.Email).toBe(contextValue.currentEmployee?.Email);
     });
 
-    it('should update the employee by publicId', async () => {
+    it('should update the employee by publicId and update skill employees', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
@@ -259,58 +260,43 @@ describe('User & Auth Resolvers', () => {
             ])
         );
 
-        const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
-        expect(dbUser?.Name).toBe('Updated User');
-    })
-
-    it('should get an employee with their associated skills', async () => {
-        const { context: contextValue, employee: testEmployee } = await createAuthenticatedContext(prisma);
-
-        const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
-        const nodeSkill = await prisma.skill.create({ data: { Name: 'Node.js' } });
-
-        await prisma.employee.update({
-            where: { id: testEmployee.id },
-            data: {
-                skills: {
-                    connect: [{ id: reactSkill.id }, { id: nodeSkill.id }],
-                },
-            },
-        });
-
-        const response = await server.executeOperation(
+        const responseSkillUpdate = await server.executeOperation(
             {
                 query: `
-                query GetEmployeeWithSkills($publicId: String!) {
-                    getEmployee(publicId: $publicId) {
+                query GetSkill($id: Int!) {
+                    getSkill(id: $id) {
                         Name
-                        skills {
+                        employees {
                             Name
                         }
                     }
                 }
             `,
-                variables: { publicId: testEmployee.publicId },
+                variables: {
+                    id: reactSkill.id
+                }
             },
             {
-                contextValue,
+                contextValue
             }
         );
 
-        if (response.body.kind !== 'single') {
+        if (responseSkillUpdate.body.kind !== 'single') {
             fail('Expected single result, but got incremental response.');
         }
 
-        const employee = response.body.singleResult.data?.getEmployee as Employee;
+        const responseDataSkills = responseSkillUpdate.body.singleResult.data?.getSkill as Skill;
 
-        expect(employee.skills).toHaveLength(2);
-        expect(employee.skills).toEqual(
+        expect(responseDataSkills.employees).toHaveLength(1);
+        expect(responseDataSkills.employees).toEqual(
             expect.arrayContaining([
-                expect.objectContaining({ Name: 'React' }),
-                expect.objectContaining({ Name: 'Node.js' }),
+                expect.objectContaining({ Name: 'Updated User' }),
             ])
         );
-    });
+
+        const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
+        expect(dbUser?.Name).toBe('Updated User');
+    })
 
     it('should delete logged in employee', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
