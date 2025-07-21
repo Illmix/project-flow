@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
-import { PrismaClient } from '@prisma/client';
+import {PrismaClient} from '@prisma/client';
+import {Skill} from "../../graphql/types.js";
 import { typeDefs } from '../../graphql/typeDefs.js';
 import { resolvers } from '../../graphql/resolvers.js';
 import {AuthPayload, Employee} from "../../graphql/types.js";
@@ -13,6 +14,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 describe('User & Auth Resolvers', () => {
     beforeEach(async () => {
         await prisma.employee.deleteMany();
+        await prisma.skill.deleteMany();
     });
 
     afterAll(async () => {
@@ -209,24 +211,30 @@ describe('User & Auth Resolvers', () => {
         expect(employee.Email).toBe(contextValue.currentEmployee?.Email);
     });
 
-    it('should update the employee by publicId', async () => {
+    it('should update the current employee and update skill employees', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
+
+        const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
+        const nodeSkill = await prisma.skill.create({ data: { Name: 'Node.js' } });
 
         const response = await server.executeOperation({
                 query: `
-        mutation UpdateEmployee($publicId: String!, $input: UpdateEmployeeInput!) {
-          updateEmployee(publicId: $publicId, input: $input) {
+        mutation UpdateEmployee($input: UpdateEmployeeInput!) {
+          updateEmployee(input: $input) {
             Name
             Email
             publicId
+            skills {
+                Name
+            }
           }
         }
       `,
                 variables: {
-                    publicId: contextValue.currentEmployee?.publicId,
                     input: {
                         Name: 'Updated User',
                         Email: 'updated@example.com',
+                        skillIds: [nodeSkill.id, reactSkill.id]
                     },
                 },
             },
@@ -244,6 +252,46 @@ describe('User & Auth Resolvers', () => {
         expect(updated.Name).toBe('Updated User');
         expect(updated.Email).toBe('updated@example.com');
         expect(updated.publicId).toBe(contextValue.currentEmployee?.publicId);
+        expect(updated.skills).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'React' }),
+                expect.objectContaining({ Name: 'Node.js' }),
+            ])
+        );
+
+        const responseSkillUpdate = await server.executeOperation(
+            {
+                query: `
+                query GetSkill($id: Int!) {
+                    getSkill(id: $id) {
+                        Name
+                        employees {
+                            Name
+                        }
+                    }
+                }
+            `,
+                variables: {
+                    id: reactSkill.id
+                }
+            },
+            {
+                contextValue
+            }
+        );
+
+        if (responseSkillUpdate.body.kind !== 'single') {
+            fail('Expected single result, but got incremental response.');
+        }
+
+        const responseDataSkills = responseSkillUpdate.body.singleResult.data?.getSkill as Skill;
+
+        expect(responseDataSkills.employees).toHaveLength(1);
+        expect(responseDataSkills.employees).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'Updated User' }),
+            ])
+        );
 
         const dbUser = await prisma.employee.findUnique({ where: { publicId: contextValue.currentEmployee?.publicId } });
         expect(dbUser?.Name).toBe('Updated User');

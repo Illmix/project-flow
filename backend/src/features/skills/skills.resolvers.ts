@@ -13,6 +13,7 @@ export const skillsResolvers: Resolvers = {
          * @description Fetches a single skill by ID.
          */
         getSkill: authenticated(async (_parent, { id }, context) => {
+
             return context.prisma.skill.findUnique({
                 where: { id },
             });
@@ -21,9 +22,11 @@ export const skillsResolvers: Resolvers = {
     Mutation: {
         createSkill: authenticated(async (_parent, {input}, context) => {
             return context.prisma.skill.create({ data: input });
-        }),
-        deleteSkill: authenticated(async (_parent, {id}, context) => {
-            return context.prisma.skill.delete({ where: { id } });
-        }),
+        })
     },
+    Skill: {
+        employees: (parent, _args, context) => {
+            return context.loaders.skillEmployees.load(parent.id);
+        }
+    }
 }

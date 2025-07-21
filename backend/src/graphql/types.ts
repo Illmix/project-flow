@@ -1,5 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
-import { Employee as PrismaEmployee } from '@prisma/client';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { Context } from '../context.js';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -8,7 +7,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -17,6 +15,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  DateTime: { input: Date; output: Date; }
 };
 
 export type AuthPayload = {
@@ -34,7 +33,7 @@ export type Employee = {
   Email: Scalars['String']['output'];
   Name: Scalars['String']['output'];
   Position?: Maybe<Scalars['String']['output']>;
-  created_at: Scalars['String']['output'];
+  created_at: Scalars['DateTime']['output'];
   publicId: Scalars['String']['output'];
   skills?: Maybe<Array<Skill>>;
 };
@@ -46,9 +45,9 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  _empty?: Maybe<Scalars['String']['output']>;
   createSkill: Skill;
   deleteMe?: Maybe<Employee>;
-  deleteSkill: Skill;
   login: AuthPayload;
   signup: AuthPayload;
   updateEmployee?: Maybe<Employee>;
@@ -57,11 +56,6 @@ export type Mutation = {
 
 export type MutationCreateSkillArgs = {
   input: CreateSkillInput;
-};
-
-
-export type MutationDeleteSkillArgs = {
-  id: Scalars['Int']['input'];
 };
 
 
@@ -77,11 +71,11 @@ export type MutationSignupArgs = {
 
 export type MutationUpdateEmployeeArgs = {
   input: UpdateEmployeeInput;
-  publicId: Scalars['String']['input'];
 };
 
 export type Query = {
   __typename?: 'Query';
+  _empty?: Maybe<Scalars['String']['output']>;
   getEmployee?: Maybe<Employee>;
   getEmployees?: Maybe<Array<Maybe<Employee>>>;
   getSkill?: Maybe<Skill>;
@@ -116,6 +110,7 @@ export type UpdateEmployeeInput = {
   Email?: InputMaybe<Scalars['String']['input']>;
   Name?: InputMaybe<Scalars['String']['input']>;
   Position?: InputMaybe<Scalars['String']['input']>;
+  skillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
 export type UpdateSkillInput = {
@@ -194,16 +189,17 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
-  AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
+  AuthPayload: ResolverTypeWrapper<AuthPayload>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateSkillInput: CreateSkillInput;
-  Employee: ResolverTypeWrapper<PrismaEmployee>;
+  DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  Employee: ResolverTypeWrapper<Employee>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
-  Skill: ResolverTypeWrapper<Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversTypes['Employee']>> }>;
+  Skill: ResolverTypeWrapper<Skill>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateSkillInput: UpdateSkillInput;
@@ -211,16 +207,17 @@ export type ResolversTypes = ResolversObject<{
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
-  AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
+  AuthPayload: AuthPayload;
   Boolean: Scalars['Boolean']['output'];
   CreateSkillInput: CreateSkillInput;
-  Employee: PrismaEmployee;
+  DateTime: Scalars['DateTime']['output'];
+  Employee: Employee;
   Int: Scalars['Int']['output'];
   LoginInput: LoginInput;
   Mutation: {};
   Query: {};
   SignUpInput: SignUpInput;
-  Skill: Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversParentTypes['Employee']>> };
+  Skill: Skill;
   String: Scalars['String']['output'];
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateSkillInput: UpdateSkillInput;
@@ -232,26 +229,31 @@ export type AuthPayloadResolvers<ContextType = Context, ParentType extends Resol
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
+
 export type EmployeeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Employee'] = ResolversParentTypes['Employee']> = ResolversObject<{
   Email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  created_at?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   skills?: Resolver<Maybe<Array<ResolversTypes['Skill']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationCreateSkillArgs, 'input'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
-  deleteSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationDeleteSkillArgs, 'id'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
-  updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input' | 'publicId'>>;
+  updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input'>>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
   getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'id'>>;
@@ -268,6 +270,7 @@ export type SkillResolvers<ContextType = Context, ParentType extends ResolversPa
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
   AuthPayload?: AuthPayloadResolvers<ContextType>;
+  DateTime?: GraphQLScalarType;
   Employee?: EmployeeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

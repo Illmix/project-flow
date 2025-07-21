@@ -25,4 +25,6 @@ async function startApolloServer() {
     console.log(`Server started on url : ${url}`);
 }
 
-startApolloServer().then(r => console.log());
+startApolloServer().catch((error) => {
+    console.error('Error starting server:', error);
+});

@@ -1,5 +1,6 @@
 import { PrismaClient, Employee } from '@prisma/client';
 import type { Context } from '../context.js';
+import {createDataLoaders} from "../lib/dataLoaders.js";
 
 /**
  * @description Creates a test user in the DB and returns a context object
@@ -18,6 +19,7 @@ export async function createAuthenticatedContext(prisma: PrismaClient): Promise<
     const context: Context = {
         prisma,
         currentEmployee: employee,
+        loaders: createDataLoaders(prisma),
     };
 
     return { context, employee };
