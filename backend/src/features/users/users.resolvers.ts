@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type {Resolvers} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 
@@ -33,11 +34,18 @@ export const usersResolvers: Resolvers = {
          * @description Updates selected employee
          */
         updateEmployee: authenticated(async (_parent, {publicId, input}, context) => {
+            const { skillIds, ...otherData } = input;
+            const dataToUpdate: Prisma.EmployeeUpdateInput = {
+                ...otherData,
+            };
+            if (skillIds) {
+                dataToUpdate.skills = {
+                    set: skillIds.map((id: number) => ({ id })),
+                };
+            }
             return context.prisma.employee.update({
                 where: { publicId },
-                data: {
-                    ...input
-                }
+                data: dataToUpdate
             });
         }),
         /**
