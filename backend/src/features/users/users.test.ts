@@ -211,7 +211,7 @@ describe('User & Auth Resolvers', () => {
         expect(employee.Email).toBe(contextValue.currentEmployee?.Email);
     });
 
-    it('should update the employee by publicId and update skill employees', async () => {
+    it('should update the current employee and update skill employees', async () => {
         const { context: contextValue } = await createAuthenticatedContext(prisma);
 
         const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
@@ -219,8 +219,8 @@ describe('User & Auth Resolvers', () => {
 
         const response = await server.executeOperation({
                 query: `
-        mutation UpdateEmployee($publicId: String!, $input: UpdateEmployeeInput!) {
-          updateEmployee(publicId: $publicId, input: $input) {
+        mutation UpdateEmployee($input: UpdateEmployeeInput!) {
+          updateEmployee(input: $input) {
             Name
             Email
             publicId
@@ -231,7 +231,6 @@ describe('User & Auth Resolvers', () => {
         }
       `,
                 variables: {
-                    publicId: contextValue.currentEmployee?.publicId,
                     input: {
                         Name: 'Updated User',
                         Email: 'updated@example.com',
