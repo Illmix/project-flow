@@ -5,6 +5,8 @@ type Employee {
   Position: String
   created_at: DateTime!
 
+  capacity_hours_per_week: Int!
+
   skills: [Skill!]
 }
 
