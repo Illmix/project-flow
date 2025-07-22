@@ -27,6 +27,8 @@ model Employee {
 
   capacity_hours_per_week Int @default(40)
 
+  createdProjects Project[]
+
   assignedTasks Task[]
 
   // Many-to-many rel: one employee can have many skills
@@ -74,6 +76,10 @@ model Project {
   Name        String
   Description String?
   created_at  DateTime @default(now())
+
+  createdById Int
+
+  createdBy   Employee @relation(fields: [createdById], references: [id])
 
   // One-to-many relationship: there can be many tasks in a project
   tasks Task[]
