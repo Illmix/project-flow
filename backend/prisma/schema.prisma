@@ -79,7 +79,7 @@ model Project {
 
   createdById Int
 
-  createdBy   Employee @relation(fields: [createdById], references: [id])
+  createdBy   Employee @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   // One-to-many relationship: there can be many tasks in a project
   tasks Task[]
