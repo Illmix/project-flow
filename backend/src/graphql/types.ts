@@ -24,6 +24,11 @@ export type AuthPayload = {
   token: Scalars['String']['output'];
 };
 
+export type CreateProjectInput = {
+  Description?: InputMaybe<Scalars['String']['input']>;
+  Name: Scalars['String']['input'];
+};
+
 export type CreateSkillInput = {
   Name: Scalars['String']['input'];
 };
@@ -47,16 +52,29 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
+  createProject: Project;
   createSkill: Skill;
   deleteMe?: Maybe<Employee>;
+  deleteProject: Project;
   login: AuthPayload;
   signup: AuthPayload;
   updateEmployee?: Maybe<Employee>;
+  updateProject: Project;
+};
+
+
+export type MutationCreateProjectArgs = {
+  input: CreateProjectInput;
 };
 
 
 export type MutationCreateSkillArgs = {
   input: CreateSkillInput;
+};
+
+
+export type MutationDeleteProjectArgs = {
+  publicId: Scalars['String']['input'];
 };
 
 
@@ -74,11 +92,27 @@ export type MutationUpdateEmployeeArgs = {
   input: UpdateEmployeeInput;
 };
 
+
+export type MutationUpdateProjectArgs = {
+  input: UpdateProjectInput;
+  publicId: Scalars['String']['input'];
+};
+
+export type Project = {
+  __typename?: 'Project';
+  Description?: Maybe<Scalars['String']['output']>;
+  Name: Scalars['String']['output'];
+  created_at: Scalars['DateTime']['output'];
+  publicId: Scalars['String']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   _empty?: Maybe<Scalars['String']['output']>;
   getEmployee?: Maybe<Employee>;
   getEmployees?: Maybe<Array<Maybe<Employee>>>;
+  getProject?: Maybe<Project>;
+  getProjects: Array<Project>;
   getSkill?: Maybe<Skill>;
   getSkills: Array<Skill>;
   me?: Maybe<Employee>;
@@ -86,6 +120,11 @@ export type Query = {
 
 
 export type QueryGetEmployeeArgs = {
+  publicId: Scalars['String']['input'];
+};
+
+
+export type QueryGetProjectArgs = {
   publicId: Scalars['String']['input'];
 };
 
@@ -112,6 +151,11 @@ export type UpdateEmployeeInput = {
   Name?: InputMaybe<Scalars['String']['input']>;
   Position?: InputMaybe<Scalars['String']['input']>;
   skillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
+};
+
+export type UpdateProjectInput = {
+  Description?: InputMaybe<Scalars['String']['input']>;
+  Name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateSkillInput = {
@@ -192,17 +236,20 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = ResolversObject<{
   AuthPayload: ResolverTypeWrapper<AuthPayload>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Employee: ResolverTypeWrapper<Employee>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
+  Project: ResolverTypeWrapper<Project>;
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
   Skill: ResolverTypeWrapper<Skill>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateEmployeeInput: UpdateEmployeeInput;
+  UpdateProjectInput: UpdateProjectInput;
   UpdateSkillInput: UpdateSkillInput;
 }>;
 
@@ -210,17 +257,20 @@ export type ResolversTypes = ResolversObject<{
 export type ResolversParentTypes = ResolversObject<{
   AuthPayload: AuthPayload;
   Boolean: Scalars['Boolean']['output'];
+  CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
   DateTime: Scalars['DateTime']['output'];
   Employee: Employee;
   Int: Scalars['Int']['output'];
   LoginInput: LoginInput;
   Mutation: {};
+  Project: Project;
   Query: {};
   SignUpInput: SignUpInput;
   Skill: Skill;
   String: Scalars['String']['output'];
   UpdateEmployeeInput: UpdateEmployeeInput;
+  UpdateProjectInput: UpdateProjectInput;
   UpdateSkillInput: UpdateSkillInput;
 }>;
 
@@ -247,17 +297,30 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'input'>>;
   createSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationCreateSkillArgs, 'input'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
+  deleteProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'publicId'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
   updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input'>>;
+  updateProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationUpdateProjectArgs, 'input' | 'publicId'>>;
+}>;
+
+export type ProjectResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = ResolversObject<{
+  Description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   getEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<QueryGetEmployeeArgs, 'publicId'>>;
   getEmployees?: Resolver<Maybe<Array<Maybe<ResolversTypes['Employee']>>>, ParentType, ContextType>;
+  getProject?: Resolver<Maybe<ResolversTypes['Project']>, ParentType, ContextType, RequireFields<QueryGetProjectArgs, 'publicId'>>;
+  getProjects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'id'>>;
   getSkills?: Resolver<Array<ResolversTypes['Skill']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
@@ -275,6 +338,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   DateTime?: GraphQLScalarType;
   Employee?: EmployeeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Project?: ProjectResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Skill?: SkillResolvers<ContextType>;
 }>;
