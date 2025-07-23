@@ -28,13 +28,12 @@ export const projectsResolvers: Resolvers = {
          */
         createProject: authenticated(async (_parent, { input }, context) => {
             const currentEmployee = context.currentEmployee;
-            if (!currentEmployee) throw new Error("Authentication error.");
 
             return context.prisma.project.create({
                 data: {
                     ...input,
                     publicId: randomUUID().slice(0, 8),
-                    createdById: currentEmployee.id
+                    createdById: currentEmployee?.id
                 },
             });
         }),

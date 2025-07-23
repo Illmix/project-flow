@@ -168,7 +168,6 @@ describe('Project Resolvers', () => {
                 Name: 'To Be Deleted',
                 publicId: 'delete-test-123',
                 createdById: employee.id,
-                created_at: new Date().toISOString()
             },
         });
 
