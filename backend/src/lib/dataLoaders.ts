@@ -1,10 +1,11 @@
 import DataLoader from 'dataloader';
-import type {Employee, PrismaClient, Skill} from '@prisma/client';
+import type {Employee, PrismaClient, Project as PrismaProject, Skill} from '@prisma/client';
 import lodash from 'lodash';
 
 export interface IDataLoaders {
     employeeSkills: DataLoader<string, Skill[]>;
     skillEmployees: DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>;
+    projectForTask: DataLoader<number, PrismaProject>;
 }
 
 /**
@@ -16,7 +17,7 @@ export interface IDataLoaders {
  * @returns An array of item arrays, ordered by the input keys.
  */
 const mapToKeys = <T extends { [key: string]: any }>(
-    keys: readonly string[],
+    keys: readonly number[] | readonly string[],
     items: T[],
     keyField: keyof T
 ) => {
@@ -78,16 +79,38 @@ const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaCl
 }
 
 /**
+ * @description Batch function to get a project for many tasks.
+ */
+const batchProjectsForTasks = async (keys: readonly number[], prisma: PrismaClient): Promise<(PrismaProject | Error)[]> => {
+    // 1. Fetch all unique projects using the provided project IDs (keys)
+    const projects = await prisma.project.findMany({
+        where: { id: { in: [...keys] } },
+    });
+
+    // 2. Create a map for fast lookups (Project ID -> Project Object)
+    const projectMap = new Map<number, PrismaProject>();
+    projects.forEach(project => {
+        projectMap.set(project.id, project);
+    });
+
+    // 3. Map the original keys to the results to ensure the order is correct.
+    return keys.map(key => projectMap.get(key) || new Error(`No project found for ID ${key}`));
+};
+
+/**
  * @description Factory function to create new DataLoader instances for each request.
  * This ensures that caching is done on a per-request basis.
  */
 export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
     return {
-        employeeSkills: new DataLoader<string, Skill[]>((keys) =>
+        employeeSkills: new DataLoader((keys) =>
             batchSkillsForEmployees(keys, prisma)
         ),
-        skillEmployees: new DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>((keys) =>
+        skillEmployees: new DataLoader((keys) =>
             batchEmployeesForSkills(keys, prisma)
+        ),
+        projectForTask: new DataLoader((keys) =>
+            batchProjectsForTasks(keys, prisma)
         ),
     };
 };
