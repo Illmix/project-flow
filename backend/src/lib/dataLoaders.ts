@@ -54,6 +54,7 @@ const toPublicEmployee = (employee: Employee): Omit<Employee, 'id' | 'Password'>
         Email: employee.Email,
         Position: employee.Position,
         created_at: employee.created_at,
+        capacity_hours_per_week: employee.capacity_hours_per_week
     };
 };
 
