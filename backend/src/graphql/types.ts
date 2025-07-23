@@ -1,4 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+import { Task as PrismaTask } from '@prisma/client';
 import { Context } from '../context.js';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -7,6 +8,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -327,22 +329,22 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
-  AuthPayload: ResolverTypeWrapper<AuthPayload>;
+  AuthPayload: ResolverTypeWrapper<Omit<AuthPayload, 'employee'> & { employee: ResolversTypes['Employee'] }>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
   CreateTaskInput: CreateTaskInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
-  Employee: ResolverTypeWrapper<Employee>;
+  Employee: ResolverTypeWrapper<Omit<Employee, 'assignedTasks' | 'skills'> & { assignedTasks?: Maybe<Array<ResolversTypes['Task']>>, skills?: Maybe<Array<ResolversTypes['Skill']>> }>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
-  Project: ResolverTypeWrapper<Project>;
+  Project: ResolverTypeWrapper<Omit<Project, 'tasks'> & { tasks?: Maybe<Array<ResolversTypes['Task']>> }>;
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
-  Skill: ResolverTypeWrapper<Skill>;
+  Skill: ResolverTypeWrapper<Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversTypes['Employee']>> }>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  Task: ResolverTypeWrapper<Task>;
+  Task: ResolverTypeWrapper<PrismaTask>;
   TaskStatus: TaskStatus;
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateProjectInput: UpdateProjectInput;
@@ -352,22 +354,22 @@ export type ResolversTypes = ResolversObject<{
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
-  AuthPayload: AuthPayload;
+  AuthPayload: Omit<AuthPayload, 'employee'> & { employee: ResolversParentTypes['Employee'] };
   Boolean: Scalars['Boolean']['output'];
   CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
   CreateTaskInput: CreateTaskInput;
   DateTime: Scalars['DateTime']['output'];
-  Employee: Employee;
+  Employee: Omit<Employee, 'assignedTasks' | 'skills'> & { assignedTasks?: Maybe<Array<ResolversParentTypes['Task']>>, skills?: Maybe<Array<ResolversParentTypes['Skill']>> };
   Int: Scalars['Int']['output'];
   LoginInput: LoginInput;
   Mutation: {};
-  Project: Project;
+  Project: Omit<Project, 'tasks'> & { tasks?: Maybe<Array<ResolversParentTypes['Task']>> };
   Query: {};
   SignUpInput: SignUpInput;
-  Skill: Skill;
+  Skill: Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversParentTypes['Employee']>> };
   String: Scalars['String']['output'];
-  Task: Task;
+  Task: PrismaTask;
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateProjectInput: UpdateProjectInput;
   UpdateSkillInput: UpdateSkillInput;
