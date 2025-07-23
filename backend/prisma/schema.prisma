@@ -62,10 +62,16 @@ model Task {
   assignee    Employee?  @relation(fields: [assignee_id], references: [id])
 
   project_id Int
-  project    Project    @relation(fields: [project_id], references: [id])
+  project    Project    @relation(fields: [project_id], references: [id], onDelete: Cascade)
 
   // Many-to-many relationship: a task may require many skills
   requiredSkills Skill[] @relation("TaskSkills")
+
+  // Many-to-many SELF-RELATION for dependencies
+  // A task can block many other tasks
+  blocking    Task[] @relation("TaskDependencies")
+  // A task can be blocked by many other tasks
+  blockedBy   Task[] @relation("TaskDependencies")
 
   @@map("tasks")
 }
