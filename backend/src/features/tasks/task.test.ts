@@ -72,4 +72,58 @@ describe('Task Resolvers', () => {
         expect(dbTask).toBeDefined();
         expect(dbTask?.project_id).toBe(project.id);
     })
+
+    it('should update a task in the project', async () => {
+        const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
+
+        const project = await contextValue.prisma.project.create({
+            data: {
+                Name: 'Test Project',
+                publicId: 'testproject-123',
+                createdById: employee.id,
+            },
+        });
+
+        const task = await contextValue.prisma.task.create({
+            data: {
+                Name: 'Test task',
+                Status: 'new',
+                publicId: 'testtask-123',
+                project_id: project.id,
+            },
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                    mutation UpdateTask($publicId: String!, $input: UpdateTaskInput!) {
+                        updateTask(publicId: $publicId, input: $input) {
+                            publicId
+                            Name
+                            Description
+                            Status
+                        }
+                    }
+                `,
+                variables: {
+                    publicId: task.publicId,
+                    input: {
+                        Name: 'Updated Task',
+                        Status: "in_progress",
+                        Description: 'Updated Task description',
+                    },
+                },
+            },
+            { contextValue }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result');
+        }
+
+        const updatedTask = response.body.singleResult.data?.updateTask as Task
+
+        expect(updatedTask.Name).toBe('Updated Task');
+        expect(updatedTask.Description).toBe('Updated Task description');
+    })
 })
