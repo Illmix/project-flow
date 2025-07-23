@@ -43,6 +43,16 @@ export const taskResolvers: Resolvers = {
                 },
             });
         }),
+        updateTask: authenticated(async (_parent, { publicId, input }, context) => {
+            const { requiredSkillIds, ...taskData } = input;
+            const dataToUpdate = { ...taskData };
+
+            if (requiredSkillIds) {
+                dataToUpdate.requiredSkills = { set: requiredSkillIds.map((id: number) => ({ id })) };
+            }
+
+            return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
+        }),
     },
     Task: {
         project: (parent, _args, context) => {
