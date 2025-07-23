@@ -1,4 +1,4 @@
-import { ApolloServer } from '@apollo/server';
+import {ApolloServer} from '@apollo/server';
 import { PrismaClient } from '@prisma/client';
 import { createAuthenticatedContext } from '../../tests/helpers.js';
 import { typeDefs } from '../../graphql/typeDefs.js';
@@ -11,6 +11,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 describe('Task Resolvers', () => {
     beforeEach(async () => {
+        await prisma.skill.deleteMany();
         await prisma.task.deleteMany();
         await prisma.project.deleteMany();
         await prisma.employee.deleteMany();
@@ -32,6 +33,9 @@ describe('Task Resolvers', () => {
             },
         });
 
+        const reactSkill = await prisma.skill.create({ data: { Name: 'React' } });
+        const nodeSkill = await prisma.skill.create({ data: { Name: 'Node.js' } });
+
         const response = await server.executeOperation(
             {
                 query: `
@@ -44,6 +48,9 @@ describe('Task Resolvers', () => {
                             project {
                                 Name
                             }
+                            requiredSkills {
+                                Name
+                            }
                         }
                     }
                 `,
@@ -52,7 +59,8 @@ describe('Task Resolvers', () => {
                         Name: 'New Test Task',
                         Status: "new",
                         Description: 'A task for testing.',
-                        projectPublicId: project.publicId
+                        projectPublicId: project.publicId,
+                        requiredSkillIds: [reactSkill.id, nodeSkill.id]
                     },
                 },
             },
@@ -67,6 +75,13 @@ describe('Task Resolvers', () => {
 
         expect(task.Name).toBe('New Test Task');
         expect(task.Description).toBe('A task for testing.');
+        expect(task.project.Name).toBe('Test Project');
+        expect(task.requiredSkills).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'React' }),
+                expect.objectContaining({ Name: 'Node.js' }),
+            ])
+        );
 
         const dbTask = await prisma.task.findUnique({ where: { publicId: task.publicId } });
         expect(dbTask).toBeDefined();
@@ -84,14 +99,21 @@ describe('Task Resolvers', () => {
             },
         });
 
+        const typescriptSkill = await prisma.skill.create({ data: { Name: 'TypeScript' } });
+        const pythonSkill = await prisma.skill.create({ data: { Name: 'Python' } });
+
         const task = await contextValue.prisma.task.create({
             data: {
                 Name: 'Test task',
                 Status: 'new',
                 publicId: 'testtask-123',
                 project_id: project.id,
+                requiredSkills: {
+                    connect: [typescriptSkill]
+                }
             },
         });
+
 
         const response = await server.executeOperation(
             {
@@ -111,6 +133,7 @@ describe('Task Resolvers', () => {
                         Name: 'Updated Task',
                         Status: "in_progress",
                         Description: 'Updated Task description',
+                        requiredSkillIds: [pythonSkill.id]
                     },
                 },
             },
@@ -125,5 +148,10 @@ describe('Task Resolvers', () => {
 
         expect(updatedTask.Name).toBe('Updated Task');
         expect(updatedTask.Description).toBe('Updated Task description');
+        expect(updatedTask.requiredSkills).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ Name: 'Python' }),
+            ])
+        );
     })
 })
