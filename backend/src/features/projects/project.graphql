@@ -4,7 +4,7 @@ type Project {
   Description: String
   created_at: DateTime!
 
-  # tasks: [Task!]
+  tasks: [Task!]
 }
 
 input CreateProjectInput {

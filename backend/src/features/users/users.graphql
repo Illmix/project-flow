@@ -8,6 +8,8 @@ type Employee {
   capacity_hours_per_week: Int
 
   skills: [Skill!]
+
+  assignedTasks: [Task!]
 }
 
 input UpdateEmployeeInput {

@@ -1,0 +1,54 @@
+# Defines the possible statuses for a task.
+enum TaskStatus {
+  new
+  in_progress
+  done
+  canceled
+}
+
+type Task {
+  publicId: String!
+  Name: String!
+  Description: String
+  Status: TaskStatus!
+  time_estimate_hours: Int
+  created_at: DateTime!
+
+  # --- Relations ---
+  project: Project!
+  assignee: Employee
+  requiredSkills: [Skill!]
+  blocking: [Task!]
+  blockedBy: [Task!]
+}
+
+input CreateTaskInput {
+  Name: String!
+  projectPublicId: String!
+  Description: String
+  time_estimate_hours: Int
+  requiredSkillIds: [Int!]
+}
+
+input UpdateTaskInput {
+  Name: String
+  Description: String
+  Status: TaskStatus
+  time_estimate_hours: Int
+  requiredSkillIds: [Int!]
+}
+
+type Query {
+  getTask(publicId: String!): Task
+  getTasksForProject(projectPublicId: String!): [Task!]!
+}
+
+type Mutation {
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(publicId: String!, input: UpdateTaskInput!): Task!
+  deleteTask(publicId: String!): Task!
+
+  assignTask(taskPublicId: String!, employeePublicId: String): Task!
+  addDependency(blockingTaskPublicId: String!, blockedTaskPublicId: String!): Task!
+  removeDependency(blockingTaskPublicId: String!, blockedTaskPublicId: String!): Task!
+}

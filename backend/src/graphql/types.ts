@@ -33,11 +33,20 @@ export type CreateSkillInput = {
   Name: Scalars['String']['input'];
 };
 
+export type CreateTaskInput = {
+  Description?: InputMaybe<Scalars['String']['input']>;
+  Name: Scalars['String']['input'];
+  projectPublicId: Scalars['String']['input'];
+  requiredSkillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
+  time_estimate_hours?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type Employee = {
   __typename?: 'Employee';
   Email: Scalars['String']['output'];
   Name: Scalars['String']['output'];
   Position?: Maybe<Scalars['String']['output']>;
+  assignedTasks?: Maybe<Array<Task>>;
   capacity_hours_per_week?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['DateTime']['output'];
   publicId: Scalars['String']['output'];
@@ -52,14 +61,32 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   _empty?: Maybe<Scalars['String']['output']>;
+  addDependency: Task;
+  assignTask: Task;
   createProject: Project;
   createSkill: Skill;
+  createTask: Task;
   deleteMe?: Maybe<Employee>;
   deleteProject: Project;
+  deleteTask: Task;
   login: AuthPayload;
+  removeDependency: Task;
   signup: AuthPayload;
   updateEmployee?: Maybe<Employee>;
   updateProject: Project;
+  updateTask: Task;
+};
+
+
+export type MutationAddDependencyArgs = {
+  blockedTaskPublicId: Scalars['String']['input'];
+  blockingTaskPublicId: Scalars['String']['input'];
+};
+
+
+export type MutationAssignTaskArgs = {
+  employeePublicId?: InputMaybe<Scalars['String']['input']>;
+  taskPublicId: Scalars['String']['input'];
 };
 
 
@@ -73,13 +100,29 @@ export type MutationCreateSkillArgs = {
 };
 
 
+export type MutationCreateTaskArgs = {
+  input: CreateTaskInput;
+};
+
+
 export type MutationDeleteProjectArgs = {
+  publicId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTaskArgs = {
   publicId: Scalars['String']['input'];
 };
 
 
 export type MutationLoginArgs = {
   input?: InputMaybe<LoginInput>;
+};
+
+
+export type MutationRemoveDependencyArgs = {
+  blockedTaskPublicId: Scalars['String']['input'];
+  blockingTaskPublicId: Scalars['String']['input'];
 };
 
 
@@ -98,12 +141,19 @@ export type MutationUpdateProjectArgs = {
   publicId: Scalars['String']['input'];
 };
 
+
+export type MutationUpdateTaskArgs = {
+  input: UpdateTaskInput;
+  publicId: Scalars['String']['input'];
+};
+
 export type Project = {
   __typename?: 'Project';
   Description?: Maybe<Scalars['String']['output']>;
   Name: Scalars['String']['output'];
   created_at: Scalars['DateTime']['output'];
   publicId: Scalars['String']['output'];
+  tasks?: Maybe<Array<Task>>;
 };
 
 export type Query = {
@@ -115,6 +165,8 @@ export type Query = {
   getProjects: Array<Project>;
   getSkill?: Maybe<Skill>;
   getSkills: Array<Skill>;
+  getTask?: Maybe<Task>;
+  getTasksForProject: Array<Task>;
   me?: Maybe<Employee>;
 };
 
@@ -133,6 +185,16 @@ export type QueryGetSkillArgs = {
   id: Scalars['Int']['input'];
 };
 
+
+export type QueryGetTaskArgs = {
+  publicId: Scalars['String']['input'];
+};
+
+
+export type QueryGetTasksForProjectArgs = {
+  projectPublicId: Scalars['String']['input'];
+};
+
 export type SignUpInput = {
   Email: Scalars['String']['input'];
   Name: Scalars['String']['input'];
@@ -145,6 +207,28 @@ export type Skill = {
   employees?: Maybe<Array<Employee>>;
   id: Scalars['Int']['output'];
 };
+
+export type Task = {
+  __typename?: 'Task';
+  Description?: Maybe<Scalars['String']['output']>;
+  Name: Scalars['String']['output'];
+  Status: TaskStatus;
+  assignee?: Maybe<Employee>;
+  blockedBy?: Maybe<Array<Task>>;
+  blocking?: Maybe<Array<Task>>;
+  created_at: Scalars['DateTime']['output'];
+  project: Project;
+  publicId: Scalars['String']['output'];
+  requiredSkills?: Maybe<Array<Skill>>;
+  time_estimate_hours?: Maybe<Scalars['Int']['output']>;
+};
+
+export enum TaskStatus {
+  Canceled = 'canceled',
+  Done = 'done',
+  InProgress = 'in_progress',
+  New = 'new'
+}
 
 export type UpdateEmployeeInput = {
   Email?: InputMaybe<Scalars['String']['input']>;
@@ -160,6 +244,14 @@ export type UpdateProjectInput = {
 
 export type UpdateSkillInput = {
   Name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateTaskInput = {
+  Description?: InputMaybe<Scalars['String']['input']>;
+  Name?: InputMaybe<Scalars['String']['input']>;
+  Status?: InputMaybe<TaskStatus>;
+  requiredSkillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
+  time_estimate_hours?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -238,6 +330,7 @@ export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
+  CreateTaskInput: CreateTaskInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   Employee: ResolverTypeWrapper<Employee>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
@@ -248,9 +341,12 @@ export type ResolversTypes = ResolversObject<{
   SignUpInput: SignUpInput;
   Skill: ResolverTypeWrapper<Skill>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  Task: ResolverTypeWrapper<Task>;
+  TaskStatus: TaskStatus;
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateProjectInput: UpdateProjectInput;
   UpdateSkillInput: UpdateSkillInput;
+  UpdateTaskInput: UpdateTaskInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -259,6 +355,7 @@ export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
   CreateProjectInput: CreateProjectInput;
   CreateSkillInput: CreateSkillInput;
+  CreateTaskInput: CreateTaskInput;
   DateTime: Scalars['DateTime']['output'];
   Employee: Employee;
   Int: Scalars['Int']['output'];
@@ -269,9 +366,11 @@ export type ResolversParentTypes = ResolversObject<{
   SignUpInput: SignUpInput;
   Skill: Skill;
   String: Scalars['String']['output'];
+  Task: Task;
   UpdateEmployeeInput: UpdateEmployeeInput;
   UpdateProjectInput: UpdateProjectInput;
   UpdateSkillInput: UpdateSkillInput;
+  UpdateTaskInput: UpdateTaskInput;
 }>;
 
 export type AuthPayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['AuthPayload'] = ResolversParentTypes['AuthPayload']> = ResolversObject<{
@@ -288,6 +387,7 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
   Email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   Position?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  assignedTasks?: Resolver<Maybe<Array<ResolversTypes['Task']>>, ParentType, ContextType>;
   capacity_hours_per_week?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -297,14 +397,20 @@ export type EmployeeResolvers<ContextType = Context, ParentType extends Resolver
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   _empty?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  addDependency?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationAddDependencyArgs, 'blockedTaskPublicId' | 'blockingTaskPublicId'>>;
+  assignTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationAssignTaskArgs, 'taskPublicId'>>;
   createProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationCreateProjectArgs, 'input'>>;
   createSkill?: Resolver<ResolversTypes['Skill'], ParentType, ContextType, RequireFields<MutationCreateSkillArgs, 'input'>>;
+  createTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationCreateTaskArgs, 'input'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
   deleteProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationDeleteProjectArgs, 'publicId'>>;
+  deleteTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationDeleteTaskArgs, 'publicId'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationLoginArgs>>;
+  removeDependency?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationRemoveDependencyArgs, 'blockedTaskPublicId' | 'blockingTaskPublicId'>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, Partial<MutationSignupArgs>>;
   updateEmployee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType, RequireFields<MutationUpdateEmployeeArgs, 'input'>>;
   updateProject?: Resolver<ResolversTypes['Project'], ParentType, ContextType, RequireFields<MutationUpdateProjectArgs, 'input' | 'publicId'>>;
+  updateTask?: Resolver<ResolversTypes['Task'], ParentType, ContextType, RequireFields<MutationUpdateTaskArgs, 'input' | 'publicId'>>;
 }>;
 
 export type ProjectResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Project'] = ResolversParentTypes['Project']> = ResolversObject<{
@@ -312,6 +418,7 @@ export type ProjectResolvers<ContextType = Context, ParentType extends Resolvers
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tasks?: Resolver<Maybe<Array<ResolversTypes['Task']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -323,6 +430,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getProjects?: Resolver<Array<ResolversTypes['Project']>, ParentType, ContextType>;
   getSkill?: Resolver<Maybe<ResolversTypes['Skill']>, ParentType, ContextType, RequireFields<QueryGetSkillArgs, 'id'>>;
   getSkills?: Resolver<Array<ResolversTypes['Skill']>, ParentType, ContextType>;
+  getTask?: Resolver<Maybe<ResolversTypes['Task']>, ParentType, ContextType, RequireFields<QueryGetTaskArgs, 'publicId'>>;
+  getTasksForProject?: Resolver<Array<ResolversTypes['Task']>, ParentType, ContextType, RequireFields<QueryGetTasksForProjectArgs, 'projectPublicId'>>;
   me?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
 }>;
 
@@ -330,6 +439,21 @@ export type SkillResolvers<ContextType = Context, ParentType extends ResolversPa
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   employees?: Resolver<Maybe<Array<ResolversTypes['Employee']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type TaskResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Task'] = ResolversParentTypes['Task']> = ResolversObject<{
+  Description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  Status?: Resolver<ResolversTypes['TaskStatus'], ParentType, ContextType>;
+  assignee?: Resolver<Maybe<ResolversTypes['Employee']>, ParentType, ContextType>;
+  blockedBy?: Resolver<Maybe<Array<ResolversTypes['Task']>>, ParentType, ContextType>;
+  blocking?: Resolver<Maybe<Array<ResolversTypes['Task']>>, ParentType, ContextType>;
+  created_at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  project?: Resolver<ResolversTypes['Project'], ParentType, ContextType>;
+  publicId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  requiredSkills?: Resolver<Maybe<Array<ResolversTypes['Skill']>>, ParentType, ContextType>;
+  time_estimate_hours?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -341,5 +465,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Project?: ProjectResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Skill?: SkillResolvers<ContextType>;
+  Task?: TaskResolvers<ContextType>;
 }>;
 
