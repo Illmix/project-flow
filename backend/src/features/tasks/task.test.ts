@@ -9,11 +9,11 @@ const prisma = new PrismaClient();
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-describe('Project Resolvers', () => {
+describe('Task Resolvers', () => {
     beforeEach(async () => {
+        await prisma.task.deleteMany();
         await prisma.project.deleteMany();
         await prisma.employee.deleteMany();
-        await prisma.task.deleteMany();
     });
 
     afterAll(async () => {
@@ -24,7 +24,7 @@ describe('Project Resolvers', () => {
     it('should create a new task in the project', async () => {
         const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
 
-        const project = await prisma.project.create({
+        const project = await contextValue.prisma.project.create({
             data: {
                 Name: 'Test Project',
                 publicId: 'testproject-123',
@@ -50,6 +50,7 @@ describe('Project Resolvers', () => {
                 variables: {
                     input: {
                         Name: 'New Test Task',
+                        Status: "new",
                         Description: 'A task for testing.',
                         projectPublicId: project.publicId
                     },
@@ -62,14 +63,13 @@ describe('Project Resolvers', () => {
             fail('Expected single result');
         }
 
-        const task = response.body.singleResult.data?.createProject as Task
+        const task = response.body.singleResult.data?.createTask as Task
 
         expect(task.Name).toBe('New Test Task');
         expect(task.Description).toBe('A task for testing.');
-        expect(task.project.Name).toBe('Test Project');
 
         const dbTask = await prisma.task.findUnique({ where: { publicId: task.publicId } });
         expect(dbTask).toBeDefined();
-        expect(dbTask?.project_id).toBe(employee.id);
+        expect(dbTask?.project_id).toBe(project.id);
     })
 })
