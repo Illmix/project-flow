@@ -62,8 +62,6 @@ describe('Task Resolvers', () => {
             fail('Expected single result');
         }
 
-        console.log(response.body.singleResult)
-
         const tasks = response.body.singleResult.data?.getTasksForProject as Task[];
         expect(tasks).toHaveLength(1);
         expect(tasks[0].Name).toBe('Test task');
@@ -157,7 +155,7 @@ describe('Task Resolvers', () => {
                 publicId: 'testtask-123',
                 project_id: project.id,
                 requiredSkills: {
-                    connect: [typescriptSkill]
+                    connect: [{id: typescriptSkill.id}]
                 }
             },
         });
@@ -172,6 +170,9 @@ describe('Task Resolvers', () => {
                             Name
                             Description
                             Status
+                            requiredSkills {
+                                Name
+                            }
                         }
                     }
                 `,
@@ -193,7 +194,6 @@ describe('Task Resolvers', () => {
         }
 
         const updatedTask = response.body.singleResult.data?.updateTask as Task
-
         expect(updatedTask.Name).toBe('Updated Task');
         expect(updatedTask.Description).toBe('Updated Task description');
         expect(updatedTask.requiredSkills).toEqual(
