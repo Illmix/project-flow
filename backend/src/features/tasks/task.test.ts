@@ -103,7 +103,6 @@ describe('Task Resolvers', () => {
             variables: {
                 input: {
                     Name: 'New Test Task',
-                    Status: "new",
                     Description: 'A task for testing.',
                     projectPublicId: project.publicId,
                     requiredSkillIds: [reactSkill.id, nodeSkill.id]
@@ -255,7 +254,6 @@ describe('Task Resolvers', () => {
                 Name: 'Assignment Project',
                 publicId: 'assign-proj-1',
                 createdById: employee.id,
-                created_at: new Date().toISOString(),
             },
         });
 
@@ -298,5 +296,99 @@ describe('Task Resolvers', () => {
 
         const dbTask = await prisma.task.findUnique({ where: { publicId: taskToAssign.publicId } });
         expect(dbTask?.assignee_id).toBe(employee.id);
+    });
+    it('should add a dependency between two tasks', async () => {
+        const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
+        const project = await prisma.project.create({
+            data: {
+                Name: 'Dependency Project',
+                publicId: 'dep-proj-1',
+                createdById: employee.id,
+            },
+        });
+        const blockingTask = await prisma.task.create({
+            data: {Name: 'Task A (Blocking)', publicId: 'task-a', project_id: project.id},
+        });
+        const blockedTask = await prisma.task.create({
+            data: {Name: 'Task B (Blocked)', publicId: 'task-b', project_id: project.id},
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                    mutation AddDependency($blockingTaskPublicId: String!, $blockedTaskPublicId: String!) {
+                        addDependency(blockingTaskPublicId: $blockingTaskPublicId, blockedTaskPublicId: $blockedTaskPublicId) {
+                            publicId
+                            blocking {
+                                publicId
+                                Name
+                            }
+                        }
+                    }
+                `,
+                variables: {
+                    blockingTaskPublicId: blockingTask.publicId,
+                    blockedTaskPublicId: blockedTask.publicId,
+                },
+            },
+            {contextValue}
+        );
+
+        if (response.body.kind !== 'single') fail('Expected single result');
+
+        const result = response.body.singleResult.data?.addDependency as Task;
+
+        expect(result.blocking).toHaveLength(1);
+        expect(result.blocking?.[0].publicId).toBe(blockedTask.publicId);
+
+
+        const dbBlockedTask = await prisma.task.findUnique({
+            where: { publicId: blockedTask.publicId },
+            include: { blockedBy: true },
+        });
+
+        expect(dbBlockedTask?.blockedBy).toHaveLength(1);
+        expect(dbBlockedTask?.blockedBy[0].publicId).toBe(blockingTask.publicId);
+    })
+
+    it('should remove a dependency between two tasks', async () => {
+        const { context: contextValue, employee } = await createAuthenticatedContext(prisma);
+        const project = await prisma.project.create({
+            data: { Name: 'Dependency Project', publicId: 'dep-proj-2', createdById: employee.id, created_at: new Date().toISOString() },
+        });
+        const blockingTask = await prisma.task.create({
+            data: { Name: 'Task A (Blocking)', publicId: 'task-a', project_id: project.id },
+        });
+        const blockedTask = await prisma.task.create({
+            data: { Name: 'Task B (Blocked)', publicId: 'task-b', project_id: project.id },
+        });
+        // Create the initial dependency link directly in the DB
+        await prisma.task.update({
+            where: { id: blockingTask.id },
+            data: { blocking: { connect: { id: blockedTask.id } } },
+        });
+
+        await server.executeOperation(
+            {
+                query: `
+                    mutation RemoveDependency($blockingTaskPublicId: String!, $blockedTaskPublicId: String!) {
+                        removeDependency(blockingTaskPublicId: $blockingTaskPublicId, blockedTaskPublicId: $blockedTaskPublicId) {
+                            publicId
+                        }
+                    }
+                `,
+                variables: {
+                    blockingTaskPublicId: blockingTask.publicId,
+                    blockedTaskPublicId: blockedTask.publicId,
+                },
+            },
+            { contextValue }
+        );
+
+        const dbBlockingTask = await prisma.task.findUnique({
+            where: { publicId: blockingTask.publicId },
+            include: { blocking: true },
+        });
+        expect(dbBlockingTask?.blocking).toHaveLength(0);
     });
 })
