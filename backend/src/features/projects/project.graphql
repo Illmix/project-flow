@@ -1,0 +1,29 @@
+type Project {
+  publicId: String!
+  Name: String!
+  Description: String
+  created_at: DateTime!
+
+  tasks: [Task!]
+}
+
+input CreateProjectInput {
+  Name: String!
+  Description: String
+}
+
+input UpdateProjectInput {
+  Name: String
+  Description: String
+}
+
+type Query {
+  getProjects: [Project!]!
+  getProject(publicId: String!): Project
+}
+
+type Mutation {
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(publicId: String!, input: UpdateProjectInput!): Project!
+  deleteProject(publicId: String!): Project!
+}

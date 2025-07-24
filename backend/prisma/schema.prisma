@@ -25,6 +25,10 @@ model Employee {
   Position   String?
   created_at DateTime @default(now())
 
+  capacity_hours_per_week Int @default(40)
+
+  createdProjects Project[]
+
   assignedTasks Task[]
 
   // Many-to-many rel: one employee can have many skills
@@ -50,7 +54,7 @@ model Task {
   publicId   String   @unique
   Name                String
   Description         String?
-  Status              TaskStatus
+  Status              TaskStatus @default(new)
   time_estimate_hours Int?
   created_at          DateTime   @default(now())
 
@@ -58,10 +62,16 @@ model Task {
   assignee    Employee?  @relation(fields: [assignee_id], references: [id])
 
   project_id Int
-  project    Project    @relation(fields: [project_id], references: [id])
+  project    Project    @relation(fields: [project_id], references: [id], onDelete: Cascade)
 
   // Many-to-many relationship: a task may require many skills
   requiredSkills Skill[] @relation("TaskSkills")
+
+  // Many-to-many SELF-RELATION for dependencies
+  // A task can block many other tasks
+  blocking    Task[] @relation("TaskDependencies")
+  // A task can be blocked by many other tasks
+  blockedBy   Task[] @relation("TaskDependencies")
 
   @@map("tasks")
 }
@@ -72,6 +82,10 @@ model Project {
   Name        String
   Description String?
   created_at  DateTime @default(now())
+
+  createdById Int
+
+  createdBy   Employee @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   // One-to-many relationship: there can be many tasks in a project
   tasks Task[]

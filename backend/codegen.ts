@@ -19,6 +19,9 @@ const config: CodegenConfig = {
                 scalars: {
                     DateTime: 'Date',
                 },
+                mappers: {
+                    Task: '@prisma/client#Task as PrismaTask',
+                }
             },
         },
     },
