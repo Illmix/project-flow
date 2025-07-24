@@ -246,4 +246,57 @@ describe('Task Resolvers', () => {
         const deletedTask = response.body.singleResult.data?.deleteTask as Task
         expect(deletedTask.publicId).toBe(task.publicId);
     })
+
+    it('should assign a task to an employee', async () => {
+        const { context: contextValue, employee } = await createAuthenticatedContext(prisma);
+
+        const project = await prisma.project.create({
+            data: {
+                Name: 'Assignment Project',
+                publicId: 'assign-proj-1',
+                createdById: employee.id,
+                created_at: new Date().toISOString(),
+            },
+        });
+
+        const taskToAssign = await prisma.task.create({
+            data: {
+                Name: 'A Task to be Assigned',
+                Status: 'new',
+                publicId: 'assign-task-1',
+                project_id: project.id,
+            },
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                    mutation AssignTask($taskPublicId: String!, $employeePublicId: String) {
+                        assignTask(taskPublicId: $taskPublicId, employeePublicId: $employeePublicId) {
+                            publicId
+                            assignee {
+                                publicId
+                                Name
+                            }
+                        }
+                    }
+                `,
+                variables: {
+                    taskPublicId: taskToAssign.publicId,
+                    employeePublicId: employee.publicId,
+                },
+            },
+            { contextValue }
+        );
+        if (response.body.kind !== 'single') fail('Expected single result');
+
+        const assignedTask = response.body.singleResult.data?.assignTask as Task;
+
+        expect(assignedTask.assignee).toBeDefined();
+        expect(assignedTask.assignee?.publicId).toBe(employee.publicId);
+        expect(assignedTask.assignee?.Name).toBe('Test User');
+
+        const dbTask = await prisma.task.findUnique({ where: { publicId: taskToAssign.publicId } });
+        expect(dbTask?.assignee_id).toBe(employee.id);
+    });
 })
