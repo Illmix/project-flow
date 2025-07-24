@@ -25,10 +25,10 @@ type Task {
 input CreateTaskInput {
   Name: String!
   projectPublicId: String!
-  Status: TaskStatus!
   Description: String
   time_estimate_hours: Int
   requiredSkillIds: [Int!]
+  blockedByTaskPublicIds: [String!]
 }
 
 input UpdateTaskInput {

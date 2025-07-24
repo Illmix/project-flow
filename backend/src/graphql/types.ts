@@ -38,7 +38,7 @@ export type CreateSkillInput = {
 export type CreateTaskInput = {
   Description?: InputMaybe<Scalars['String']['input']>;
   Name: Scalars['String']['input'];
-  Status: TaskStatus;
+  blockedByTaskPublicIds?: InputMaybe<Array<Scalars['String']['input']>>;
   projectPublicId: Scalars['String']['input'];
   requiredSkillIds?: InputMaybe<Array<Scalars['Int']['input']>>;
   time_estimate_hours?: InputMaybe<Scalars['Int']['input']>;
