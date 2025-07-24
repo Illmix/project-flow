@@ -37,7 +37,7 @@ describe('Task Resolvers', () => {
                 Name: 'Test task',
                 Status: 'new',
                 publicId: 'testtask-123',
-                project_id: project.id,
+                projectId: project.id,
             },
         });
 
@@ -130,7 +130,7 @@ describe('Task Resolvers', () => {
 
         const dbTask = await prisma.task.findUnique({ where: { publicId: task.publicId } });
         expect(dbTask).toBeDefined();
-        expect(dbTask?.project_id).toBe(project.id);
+        expect(dbTask?.projectId).toBe(project.id);
     })
 
     it('should update a task in the project', async () => {
@@ -152,7 +152,7 @@ describe('Task Resolvers', () => {
                 Name: 'Test task',
                 Status: 'new',
                 publicId: 'testtask-123',
-                project_id: project.id,
+                projectId: project.id,
                 requiredSkills: {
                     connect: [{id: typescriptSkill.id}]
                 }
@@ -217,7 +217,7 @@ describe('Task Resolvers', () => {
                 Name: 'Test task',
                 Status: 'new',
                 publicId: 'testtask-123',
-                project_id: project.id,
+                projectId: project.id,
             },
         });
 
@@ -262,7 +262,7 @@ describe('Task Resolvers', () => {
                 Name: 'A Task to be Assigned',
                 Status: 'new',
                 publicId: 'assign-task-1',
-                project_id: project.id,
+                projectId: project.id,
             },
         });
 
@@ -295,7 +295,7 @@ describe('Task Resolvers', () => {
         expect(assignedTask.assignee?.Name).toBe('Test User');
 
         const dbTask = await prisma.task.findUnique({ where: { publicId: taskToAssign.publicId } });
-        expect(dbTask?.assignee_id).toBe(employee.id);
+        expect(dbTask?.assigneeId).toBe(employee.id);
     });
     it('should add a dependency between two tasks', async () => {
         const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
@@ -307,10 +307,10 @@ describe('Task Resolvers', () => {
             },
         });
         const blockingTask = await prisma.task.create({
-            data: {Name: 'Task A (Blocking)', publicId: 'task-a', project_id: project.id},
+            data: {Name: 'Task A (Blocking)', publicId: 'task-a', projectId: project.id},
         });
         const blockedTask = await prisma.task.create({
-            data: {Name: 'Task B (Blocked)', publicId: 'task-b', project_id: project.id},
+            data: {Name: 'Task B (Blocked)', publicId: 'task-b', projectId: project.id},
         });
 
         const response = await server.executeOperation(
@@ -357,10 +357,10 @@ describe('Task Resolvers', () => {
             data: { Name: 'Dependency Project', publicId: 'dep-proj-2', createdById: employee.id, created_at: new Date().toISOString() },
         });
         const blockingTask = await prisma.task.create({
-            data: { Name: 'Task A (Blocking)', publicId: 'task-a', project_id: project.id },
+            data: { Name: 'Task A (Blocking)', publicId: 'task-a', projectId: project.id },
         });
         const blockedTask = await prisma.task.create({
-            data: { Name: 'Task B (Blocked)', publicId: 'task-b', project_id: project.id },
+            data: { Name: 'Task B (Blocked)', publicId: 'task-b', projectId: project.id },
         });
         // Create the initial dependency link directly in the DB
         await prisma.task.update({

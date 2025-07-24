@@ -36,7 +36,7 @@ export const taskResolvers: Resolvers = {
                 data: {
                     ...taskData,
                     publicId: randomUUID().slice(0, 8),
-                    project_id: project.id,
+                    projectId: project.id,
                     ...(requiredSkillIds && {
                         requiredSkills: {connect: requiredSkillIds.map((id: number) => ({id}))},
                     }),
@@ -89,11 +89,11 @@ export const taskResolvers: Resolvers = {
     },
     Task: {
         project: (parent, _args, context) => {
-            return context.loaders.projectForTask.load(parent.project_id);
+            return context.loaders.projectForTask.load(parent.projectId);
         },
         assignee: (parent, _args, context) => {
-            if (!parent.assignee_id) return null
-            return context.loaders.employeeForTask.load(parent.assignee_id);
+            if (!parent.assigneeId) return null
+            return context.loaders.employeeForTask.load(parent.assigneeId);
         },
         requiredSkills: (parent, _args, context) => {
             return context.loaders.skillsForTask.load(parent.id);
