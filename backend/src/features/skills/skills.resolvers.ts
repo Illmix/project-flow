@@ -19,11 +19,17 @@ export const skillsResolvers: Resolvers = {
             });
         }),
     },
+    /**
+     * @description Mutations for creating and managing skills.
+     */
     Mutation: {
         createSkill: authenticated(async (_parent, {input}, context) => {
             return context.prisma.skill.create({ data: input });
         })
     },
+    /**
+     * @description Field resolvers for the Skill type, such as related employees.
+     */
     Skill: {
         employees: (parent, _args, context) => {
             return context.loaders.skillEmployees.load(parent.id);
