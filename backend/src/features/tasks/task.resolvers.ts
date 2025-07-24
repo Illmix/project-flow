@@ -1,4 +1,14 @@
-import type {CreateTaskInput, Resolvers} from '../../graphql/types.js';
+import type {
+    Resolvers,
+    QueryGetTasksForProjectArgs,
+    QueryGetTaskArgs,
+    MutationCreateTaskArgs,
+    MutationUpdateTaskArgs,
+    MutationDeleteTaskArgs,
+    MutationAssignTaskArgs,
+    MutationAddDependencyArgs,
+    MutationRemoveDependencyArgs
+} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 import {randomUUID} from "crypto";
 import {Task} from "@prisma/client";
@@ -10,7 +20,8 @@ export const taskResolvers: Resolvers = {
          * Fetches a list of all tasks by project.
          * @returns List of tasks for the specified project, ordered by name.
          */
-        getTasksForProject: authenticated(async (_parent, {projectPublicId}, context): Promise<Task[] | null> => {
+        getTasksForProject: authenticated(async (_parent, args: QueryGetTasksForProjectArgs, context): Promise<Task[] | null> => {
+            const { projectPublicId } = args;
             return context.prisma.task.findMany({
                 where: {project: {publicId: projectPublicId}},
                 orderBy: {Name: 'asc'},
@@ -20,7 +31,8 @@ export const taskResolvers: Resolvers = {
          * Fetches a single task by its public ID.
          * @returns The task with the specified public ID, or null if not found.
          */
-        getTask: authenticated(async (_parent, { publicId }, context): Promise<Task | null> => {
+        getTask: authenticated(async (_parent, args: QueryGetTaskArgs, context): Promise<Task | null> => {
+            const { publicId } = args;
             return context.prisma.task.findUnique({ where: { publicId } });
         }),
     },
@@ -29,7 +41,8 @@ export const taskResolvers: Resolvers = {
          * Creates a new task within a project.
          * @returns The created task.
          */
-        createTask: authenticated(async (_parent, { input }: {input: CreateTaskInput}, context): Promise<Task> => {
+        createTask: authenticated(async (_parent, args: MutationCreateTaskArgs, context): Promise<Task> => {
+            const { input } = args;
             const { projectPublicId, requiredSkillIds, blockedByTaskPublicIds, ...taskData } = input;
 
             const project = await context.prisma.project.findUnique({
@@ -58,21 +71,26 @@ export const taskResolvers: Resolvers = {
          * Updates an existing task by its public ID.
          * @returns The updated task.
          */
-        updateTask: authenticated(async (_parent, { publicId, input }, context) => {
+        updateTask: authenticated(async (_parent, args: MutationUpdateTaskArgs, context) => {
+            const { publicId, input } = args;
             const { requiredSkillIds, ...taskData } = input;
-            const dataToUpdate = { ...taskData };
-
+            // Only include fields if they are not undefined/null
+            const dataToUpdate: any = {};
+            if (taskData.Name != null) dataToUpdate.Name = taskData.Name;
+            if (taskData.Description != null) dataToUpdate.Description = taskData.Description;
+            if (taskData.Status != null) dataToUpdate.Status = taskData.Status;
+            if (taskData.time_estimate_hours != null) dataToUpdate.time_estimate_hours = taskData.time_estimate_hours;
             if (requiredSkillIds) {
                 dataToUpdate.requiredSkills = { set: requiredSkillIds.map((id: number) => ({ id })) };
             }
-
             return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
         }),
         /**
          * Deletes a task by its public ID.
          * @returns The deleted task.
          */
-        deleteTask: authenticated(async (_parent, { publicId }, context) => {
+        deleteTask: authenticated(async (_parent, args: MutationDeleteTaskArgs, context) => {
+            const { publicId } = args;
             return context.prisma.task.delete({ where: { publicId } });
         }),
 
@@ -80,7 +98,8 @@ export const taskResolvers: Resolvers = {
          * Assigns or unassigns an employee to a task.
          * @returns The updated task with new assignee.
          */
-        assignTask: authenticated(async (_parent, { taskPublicId, employeePublicId }, context) => {
+        assignTask: authenticated(async (_parent, args: MutationAssignTaskArgs, context) => {
+            const { taskPublicId, employeePublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: taskPublicId },
                 data: {
@@ -95,7 +114,8 @@ export const taskResolvers: Resolvers = {
          * Adds a dependency: makes one task block another.
          * @returns The updated blocking task.
          */
-        addDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+        addDependency: authenticated(async (_parent, args: MutationAddDependencyArgs, context) => {
+            const { blockingTaskPublicId, blockedTaskPublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: blockingTaskPublicId },
                 data: { blocking: { connect: { publicId: blockedTaskPublicId } } },
@@ -106,7 +126,8 @@ export const taskResolvers: Resolvers = {
          * Removes a dependency: unblocks a task from another.
          * @returns The updated blocking task.
          */
-        removeDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+        removeDependency: authenticated(async (_parent, args: MutationRemoveDependencyArgs, context) => {
+            const { blockingTaskPublicId, blockedTaskPublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: blockingTaskPublicId },
                 data: { blocking: { disconnect: { publicId: blockedTaskPublicId } } },
