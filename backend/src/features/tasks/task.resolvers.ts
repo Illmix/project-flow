@@ -56,10 +56,25 @@ export const taskResolvers: Resolvers = {
         deleteTask: authenticated(async (_parent, { publicId }, context) => {
             return context.prisma.task.delete({ where: { publicId } });
         }),
+
+        assignTask: authenticated(async (_parent, { taskPublicId, employeePublicId }, context) => {
+            return context.prisma.task.update({
+                where: { publicId: taskPublicId },
+                data: {
+                    assignee: employeePublicId
+                        ? { connect: { publicId: employeePublicId } }
+                        : { disconnect: true },
+                },
+            });
+        }),
     },
     Task: {
         project: (parent, _args, context) => {
             return context.loaders.projectForTask.load(parent.project_id);
+        },
+        assignee: (parent, _args, context) => {
+            if (!parent.assignee_id) return null
+            return context.loaders.employeeForTask.load(parent.assignee_id);
         },
         requiredSkills: (parent, _args, context) => {
             return context.loaders.skillsForTask.load(parent.id);
