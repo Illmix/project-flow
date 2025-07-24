@@ -6,6 +6,7 @@ export interface IDataLoaders {
     employeeSkills: DataLoader<string, Skill[]>;
     skillEmployees: DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>;
     projectForTask: DataLoader<number, PrismaProject>;
+    skillsForTask: DataLoader<number, Skill[]>;
 }
 
 /**
@@ -82,20 +83,35 @@ const batchEmployeesForSkills = async (keys: readonly number[], prisma: PrismaCl
  * @description Batch function to get a project for many tasks.
  */
 const batchProjectsForTasks = async (keys: readonly number[], prisma: PrismaClient): Promise<(PrismaProject | Error)[]> => {
-    // 1. Fetch all unique projects using the provided project IDs (keys)
     const projects = await prisma.project.findMany({
         where: { id: { in: [...keys] } },
     });
 
-    // 2. Create a map for fast lookups (Project ID -> Project Object)
     const projectMap = new Map<number, PrismaProject>();
     projects.forEach(project => {
         projectMap.set(project.id, project);
     });
 
-    // 3. Map the original keys to the results to ensure the order is correct.
     return keys.map(key => projectMap.get(key) || new Error(`No project found for ID ${key}`));
 };
+
+/**
+ * @description Batch function to get required skills for many tasks.
+ */
+const batchSkillsForTask = async (keys: readonly number[], prisma: PrismaClient): Promise<Skill[][]> => {
+    const tasks = await prisma.task.findMany({
+        where: { id: { in: [...keys] } },
+        include: { requiredSkills: true },
+    });
+
+    const skillsMap = new Map<number, Skill[]>();
+    tasks.forEach(task => {
+        skillsMap.set(task.id, task.requiredSkills);
+    });
+
+    return keys.map(key => skillsMap.get(key) || []);
+};
+
 
 /**
  * @description Factory function to create new DataLoader instances for each request.
@@ -111,6 +127,9 @@ export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
         ),
         projectForTask: new DataLoader((keys) =>
             batchProjectsForTasks(keys, prisma)
+        ),
+        skillsForTask: new DataLoader((keys) =>
+            batchSkillsForTask(keys, prisma)
         ),
     };
 };

@@ -38,17 +38,17 @@ export const taskResolvers: Resolvers = {
                     publicId: randomUUID().slice(0, 8),
                     project_id: project.id,
                     ...(requiredSkillIds && {
-                        requiredSkills: { connect: requiredSkillIds.map((id: number) => ({ id })) },
+                        requiredSkills: {connect: requiredSkillIds.map((id: number) => ({id}))},
                     }),
                 },
-            });
+            })
         }),
         updateTask: authenticated(async (_parent, { publicId, input }, context) => {
             const { requiredSkillIds, ...taskData } = input;
             const dataToUpdate = { ...taskData };
 
             if (requiredSkillIds) {
-                dataToUpdate.requiredSkills = { set: requiredSkillIds.map((id: number) => ({ id })) };
+                dataToUpdate.requiredSkills = { connect: requiredSkillIds.map((id: number) => ({ id })) };
             }
 
             return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
@@ -57,6 +57,9 @@ export const taskResolvers: Resolvers = {
     Task: {
         project: (parent, _args, context) => {
             return context.loaders.projectForTask.load(parent.project_id);
+        },
+        requiredSkills: (parent, _args, context) => {
+            return context.loaders.skillsForTask.load(parent.id);
         }
     }
 }
