@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader';
-import type {Employee, PrismaClient, Project as PrismaProject, Skill} from '@prisma/client';
+import type {Employee, PrismaClient, Project as PrismaProject, Skill, Task} from '@prisma/client';
 import lodash from 'lodash';
 
 export interface IDataLoaders {
@@ -8,6 +8,8 @@ export interface IDataLoaders {
     projectForTask: DataLoader<number, PrismaProject>;
     skillsForTask: DataLoader<number, Skill[]>;
     employeeForTask: DataLoader<number, Employee>;
+    tasksBlocking: DataLoader<number, Task[]>;
+    tasksBlockedBy: DataLoader<number, Task[]>;
 }
 
 /**
@@ -131,6 +133,40 @@ const batchEmployeesForTasks = async (keys: readonly number[], prisma: PrismaCli
 
 
 /**
+ * @description Batch function to get the tasks that a set of tasks are blocking.
+ */
+const batchTasksBlocking = async (keys: readonly number[], prisma: PrismaClient): Promise<Task[][]> => {
+    const tasks = await prisma.task.findMany({
+        where: { id: { in: [...keys] } },
+        include: { blocking: true }, // Include the tasks that THIS task blocks
+    });
+
+    const blockingMap = new Map<number, Task[]>();
+    tasks.forEach(task => {
+        blockingMap.set(task.id, task.blocking);
+    });
+
+    return keys.map(key => blockingMap.get(key) || []);
+};
+
+/**
+ * @description Batch function to get the tasks that block a set of tasks.
+ */
+const batchTasksBlockedBy = async (keys: readonly number[], prisma: PrismaClient): Promise<Task[][]> => {
+    const tasks = await prisma.task.findMany({
+        where: { id: { in: [...keys] } },
+        include: { blockedBy: true }, // Include the tasks that block THIS task
+    });
+
+    const blockedByMap = new Map<number, Task[]>();
+    tasks.forEach(task => {
+        blockedByMap.set(task.id, task.blockedBy);
+    });
+
+    return keys.map(key => blockedByMap.get(key) || []);
+};
+
+/**
  * @description Factory function to create new DataLoader instances for each request.
  * This ensures that caching is done on a per-request basis.
  */
@@ -150,6 +186,12 @@ export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
         ),
         employeeForTask: new DataLoader((keys) =>
             batchEmployeesForTasks(keys, prisma)
+        ),
+        tasksBlocking: new DataLoader<number, Task[]>((keys) =>
+            batchTasksBlocking(keys, prisma)
+        ),
+        tasksBlockedBy: new DataLoader<number, Task[]>((keys) =>
+            batchTasksBlockedBy(keys, prisma)
         ),
     };
 };
