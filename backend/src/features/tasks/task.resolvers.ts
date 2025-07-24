@@ -1,4 +1,4 @@
-import type {Resolvers} from '../../graphql/types.js';
+import type {CreateTaskInput, Resolvers} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 import {randomUUID} from "crypto";
 import {Task} from "@prisma/client";
@@ -23,8 +23,8 @@ export const taskResolvers: Resolvers = {
         }),
     },
     Mutation: {
-        createTask: authenticated(async (_parent, { input }, context): Promise<Task> => {
-            const { projectPublicId, requiredSkillIds, ...taskData } = input;
+        createTask: authenticated(async (_parent, { input }: {input: CreateTaskInput}, context): Promise<Task> => {
+            const { projectPublicId, requiredSkillIds, blockedByTaskPublicIds, ...taskData } = input;
 
             const project = await context.prisma.project.findUnique({
                 where: { publicId: projectPublicId },
@@ -39,6 +39,11 @@ export const taskResolvers: Resolvers = {
                     project_id: project.id,
                     ...(requiredSkillIds && {
                         requiredSkills: {connect: requiredSkillIds.map((id: number) => ({id}))},
+                    }),
+                    ...(blockedByTaskPublicIds && {
+                        blockedBy: {
+                            connect: blockedByTaskPublicIds.map((publicId: string) => ({ publicId })),
+                        },
                     }),
                 },
             })
@@ -67,6 +72,20 @@ export const taskResolvers: Resolvers = {
                 },
             });
         }),
+
+        addDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+            return context.prisma.task.update({
+                where: { publicId: blockingTaskPublicId },
+                data: { blocking: { connect: { publicId: blockedTaskPublicId } } },
+            });
+        }),
+
+        removeDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+            return context.prisma.task.update({
+                where: { publicId: blockingTaskPublicId },
+                data: { blocking: { disconnect: { publicId: blockedTaskPublicId } } },
+            });
+        }),
     },
     Task: {
         project: (parent, _args, context) => {
@@ -78,6 +97,14 @@ export const taskResolvers: Resolvers = {
         },
         requiredSkills: (parent, _args, context) => {
             return context.loaders.skillsForTask.load(parent.id);
-        }
+        },
+        blocking: (parent, _args, context) => {
+            // Get tasks that this task is blocking
+            return context.loaders.tasksBlocking.load(parent.id);
+        },
+        blockedBy: (parent, _args, context) => {
+            // Get tasks that block this task
+            return context.loaders.tasksBlockedBy.load(parent.id);
+        },
     }
 }
