@@ -1,5 +1,9 @@
 import type { Prisma } from '@prisma/client';
-import type {Resolvers} from '../../graphql/types.js';
+import type {
+    Resolvers,
+    QueryGetEmployeeArgs,
+    MutationUpdateEmployeeArgs
+} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 
 export const usersResolvers: Resolvers = {
@@ -13,7 +17,8 @@ export const usersResolvers: Resolvers = {
         /**
          * @description Fetches a single employee by their public ID.
          */
-        getEmployee: authenticated(async (_parent, { publicId }, context) => {
+        getEmployee: authenticated(async (_parent, args: QueryGetEmployeeArgs, context) => {
+            const { publicId } = args;
             return context.prisma.employee.findUnique({
                 where: { publicId },
             });
@@ -33,15 +38,16 @@ export const usersResolvers: Resolvers = {
         /**
          * @description Updates selected employee
          */
-        updateEmployee: authenticated(async (_parent, {input}, context) => {
+        updateEmployee: authenticated(async (_parent, args: MutationUpdateEmployeeArgs, context) => {
             const currentEmployee = context.currentEmployee;
 
             if (!currentEmployee) return null
 
-            const { skillIds, ...otherData } = input;
-            const dataToUpdate: Prisma.EmployeeUpdateInput = {
-                ...otherData,
-            };
+            const { skillIds, ...otherData } = args.input;
+            const dataToUpdate: Prisma.EmployeeUpdateInput = {};
+            if (otherData.Name != null) dataToUpdate.Name = otherData.Name;
+            if (otherData.Email != null) dataToUpdate.Email = otherData.Email;
+            if (otherData.Position != null) dataToUpdate.Position = otherData.Position;
             if (skillIds) {
                 dataToUpdate.skills = {
                     set: skillIds.map((id: number) => ({ id })),
@@ -55,7 +61,7 @@ export const usersResolvers: Resolvers = {
         /**
          * @description Deletes authenticated employee
          */
-        deleteMe: authenticated(async (_parent, _args, context) => {
+        deleteMe: authenticated(async (_parent, _args: unknown, context) => {
             const currentEmployee = context.currentEmployee;
 
             if (!currentEmployee) return null

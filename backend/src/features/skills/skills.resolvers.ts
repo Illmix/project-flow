@@ -1,4 +1,8 @@
-import type {Resolvers} from '../../graphql/types.js';
+import type {
+    Resolvers,
+    QueryGetSkillArgs,
+    MutationCreateSkillArgs
+} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 
 export const skillsResolvers: Resolvers = {
@@ -12,18 +16,25 @@ export const skillsResolvers: Resolvers = {
         /**
          * @description Fetches a single skill by ID.
          */
-        getSkill: authenticated(async (_parent, { id }, context) => {
-
+        getSkill: authenticated(async (_parent, args: QueryGetSkillArgs, context) => {
+            const { id } = args;
             return context.prisma.skill.findUnique({
                 where: { id },
             });
         }),
     },
+    /**
+     * @description Mutations for creating and managing skills.
+     */
     Mutation: {
-        createSkill: authenticated(async (_parent, {input}, context) => {
+        createSkill: authenticated(async (_parent, args: MutationCreateSkillArgs, context) => {
+            const { input } = args;
             return context.prisma.skill.create({ data: input });
         })
     },
+    /**
+     * @description Field resolvers for the Skill type, such as related employees.
+     */
     Skill: {
         employees: (parent, _args, context) => {
             return context.loaders.skillEmployees.load(parent.id);

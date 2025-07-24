@@ -1,6 +1,13 @@
-import type {Resolvers} from '../../graphql/types.js';
+import type {
+    Resolvers,
+    QueryGetProjectArgs,
+    MutationCreateProjectArgs,
+    MutationUpdateProjectArgs,
+    MutationDeleteProjectArgs
+} from '../../graphql/types.js';
 import {authenticated, isProjectOwner} from "../../lib/permissions.js";
 import {randomUUID} from "crypto";
+import type { Prisma } from '@prisma/client';
 
 
 export const projectsResolvers: Resolvers = {
@@ -16,7 +23,8 @@ export const projectsResolvers: Resolvers = {
         /**
          * @description Fetches a single project by its public ID.
          */
-        getProject: authenticated(async (_parent, { publicId }, context) => {
+        getProject: authenticated(async (_parent, args: QueryGetProjectArgs, context) => {
+            const { publicId } = args;
             return context.prisma.project.findUnique({
                 where: { publicId },
             });
@@ -26,30 +34,38 @@ export const projectsResolvers: Resolvers = {
         /**
          * @description Creates a new project.
          */
-        createProject: authenticated(async (_parent, { input }, context) => {
+        createProject: authenticated(async (_parent, args: MutationCreateProjectArgs, context) => {
+            const { input } = args;
             const currentEmployee = context.currentEmployee;
-
+            if (!currentEmployee) return null
             return context.prisma.project.create({
                 data: {
                     ...input,
                     publicId: randomUUID().slice(0, 8),
-                    createdById: currentEmployee?.id
+                    createdById: currentEmployee.id
                 },
             });
         }),
         /**
          * @description Updates an existing project.
          */
-        updateProject: isProjectOwner(async (_parent, { publicId, input }, context) => {
+        updateProject: isProjectOwner(async (_parent, args: MutationUpdateProjectArgs, context) => {
+            const { publicId, input } = args;
+            // Only include fields if they are not undefined/null
+            const data: Prisma.ProjectUpdateInput = {
+                ...(input.Name != null ? { Name: input.Name } : {}),
+                ...(input.Description != null ? { Description: input.Description } : {}),
+            };
             return context.prisma.project.update({
                 where: {publicId},
-                data: {...input},
+                data,
             });
         }),
         /**
          * @description Deletes a project.
          */
-        deleteProject: isProjectOwner(async (_parent, { publicId }, context) => {
+        deleteProject: isProjectOwner(async (_parent, args: MutationDeleteProjectArgs, context) => {
+            const { publicId } = args;
             return context.prisma.project.delete({
                 where: {publicId},
             });

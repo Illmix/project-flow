@@ -1,4 +1,14 @@
-import type {CreateTaskInput, Resolvers} from '../../graphql/types.js';
+import type {
+    Resolvers,
+    QueryGetTasksForProjectArgs,
+    QueryGetTaskArgs,
+    MutationCreateTaskArgs,
+    MutationUpdateTaskArgs,
+    MutationDeleteTaskArgs,
+    MutationAssignTaskArgs,
+    MutationAddDependencyArgs,
+    MutationRemoveDependencyArgs
+} from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
 import {randomUUID} from "crypto";
 import {Task} from "@prisma/client";
@@ -7,23 +17,32 @@ import {Task} from "@prisma/client";
 export const taskResolvers: Resolvers = {
     Query: {
         /**
-         * @description Fetches a list of all tasks by project.
+         * Fetches a list of all tasks by project.
+         * @returns List of tasks for the specified project, ordered by name.
          */
-        getTasksForProject: authenticated(async (_parent, {projectPublicId}, context): Promise<Task[] | null> => {
+        getTasksForProject: authenticated(async (_parent, args: QueryGetTasksForProjectArgs, context): Promise<Task[] | null> => {
+            const { projectPublicId } = args;
             return context.prisma.task.findMany({
                 where: {project: {publicId: projectPublicId}},
                 orderBy: {Name: 'asc'},
             });
         }),
         /**
-         * @description Fetches a single task by its public ID.
+         * Fetches a single task by its public ID.
+         * @returns The task with the specified public ID, or null if not found.
          */
-        getTask: authenticated(async (_parent, { publicId }, context): Promise<Task | null> => {
+        getTask: authenticated(async (_parent, args: QueryGetTaskArgs, context): Promise<Task | null> => {
+            const { publicId } = args;
             return context.prisma.task.findUnique({ where: { publicId } });
         }),
     },
     Mutation: {
-        createTask: authenticated(async (_parent, { input }: {input: CreateTaskInput}, context): Promise<Task> => {
+        /**
+         * Creates a new task within a project.
+         * @returns The created task.
+         */
+        createTask: authenticated(async (_parent, args: MutationCreateTaskArgs, context): Promise<Task> => {
+            const { input } = args;
             const { projectPublicId, requiredSkillIds, blockedByTaskPublicIds, ...taskData } = input;
 
             const project = await context.prisma.project.findUnique({
@@ -36,7 +55,7 @@ export const taskResolvers: Resolvers = {
                 data: {
                     ...taskData,
                     publicId: randomUUID().slice(0, 8),
-                    project_id: project.id,
+                    projectId: project.id,
                     ...(requiredSkillIds && {
                         requiredSkills: {connect: requiredSkillIds.map((id: number) => ({id}))},
                     }),
@@ -48,21 +67,39 @@ export const taskResolvers: Resolvers = {
                 },
             })
         }),
-        updateTask: authenticated(async (_parent, { publicId, input }, context) => {
+        /**
+         * Updates an existing task by its public ID.
+         * @returns The updated task.
+         */
+        updateTask: authenticated(async (_parent, args: MutationUpdateTaskArgs, context) => {
+            const { publicId, input } = args;
             const { requiredSkillIds, ...taskData } = input;
-            const dataToUpdate = { ...taskData };
-
+            // Only include fields if they are not undefined/null
+            const dataToUpdate: any = {};
+            if (taskData.Name != null) dataToUpdate.Name = taskData.Name;
+            if (taskData.Description != null) dataToUpdate.Description = taskData.Description;
+            if (taskData.Status != null) dataToUpdate.Status = taskData.Status;
+            if (taskData.time_estimate_hours != null) dataToUpdate.time_estimate_hours = taskData.time_estimate_hours;
             if (requiredSkillIds) {
                 dataToUpdate.requiredSkills = { set: requiredSkillIds.map((id: number) => ({ id })) };
             }
-
             return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
         }),
-        deleteTask: authenticated(async (_parent, { publicId }, context) => {
+        /**
+         * Deletes a task by its public ID.
+         * @returns The deleted task.
+         */
+        deleteTask: authenticated(async (_parent, args: MutationDeleteTaskArgs, context) => {
+            const { publicId } = args;
             return context.prisma.task.delete({ where: { publicId } });
         }),
 
-        assignTask: authenticated(async (_parent, { taskPublicId, employeePublicId }, context) => {
+        /**
+         * Assigns or unassigns an employee to a task.
+         * @returns The updated task with new assignee.
+         */
+        assignTask: authenticated(async (_parent, args: MutationAssignTaskArgs, context) => {
+            const { taskPublicId, employeePublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: taskPublicId },
                 data: {
@@ -73,14 +110,24 @@ export const taskResolvers: Resolvers = {
             });
         }),
 
-        addDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+        /**
+         * Adds a dependency: makes one task block another.
+         * @returns The updated blocking task.
+         */
+        addDependency: authenticated(async (_parent, args: MutationAddDependencyArgs, context) => {
+            const { blockingTaskPublicId, blockedTaskPublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: blockingTaskPublicId },
                 data: { blocking: { connect: { publicId: blockedTaskPublicId } } },
             });
         }),
 
-        removeDependency: authenticated(async (_parent, { blockingTaskPublicId, blockedTaskPublicId }, context) => {
+        /**
+         * Removes a dependency: unblocks a task from another.
+         * @returns The updated blocking task.
+         */
+        removeDependency: authenticated(async (_parent, args: MutationRemoveDependencyArgs, context) => {
+            const { blockingTaskPublicId, blockedTaskPublicId } = args;
             return context.prisma.task.update({
                 where: { publicId: blockingTaskPublicId },
                 data: { blocking: { disconnect: { publicId: blockedTaskPublicId } } },
@@ -88,22 +135,40 @@ export const taskResolvers: Resolvers = {
         }),
     },
     Task: {
+        /**
+         * Resolves the project for a given task.
+         * @returns The project associated with the task.
+         */
         project: (parent, _args, context) => {
-            return context.loaders.projectForTask.load(parent.project_id);
+            return context.loaders.projectForTask.load(parent.projectId);
         },
+        /**
+         * Resolves the assignee (employee) for a given task.
+         * @returns The employee assigned to the task, or null if none.
+         */
         assignee: (parent, _args, context) => {
-            if (!parent.assignee_id) return null
-            return context.loaders.employeeForTask.load(parent.assignee_id);
+            if (!parent.assigneeId) return null
+            return context.loaders.employeeForTask.load(parent.assigneeId);
         },
+        /**
+         * Resolves the required skills for a given task.
+         * @returns List of skills required for the task.
+         */
         requiredSkills: (parent, _args, context) => {
             return context.loaders.skillsForTask.load(parent.id);
         },
+        /**
+         * Gets tasks that this task is blocking.
+         * @returns List of tasks that are blocked by this task.
+         */
         blocking: (parent, _args, context) => {
-            // Get tasks that this task is blocking
             return context.loaders.tasksBlocking.load(parent.id);
         },
+        /**
+         * Gets tasks that block this task.
+         * @returns List of tasks that block this task.
+         */
         blockedBy: (parent, _args, context) => {
-            // Get tasks that block this task
             return context.loaders.tasksBlockedBy.load(parent.id);
         },
     }
