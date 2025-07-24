@@ -53,6 +53,9 @@ export const taskResolvers: Resolvers = {
 
             return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
         }),
+        deleteTask: authenticated(async (_parent, { publicId }, context) => {
+            return context.prisma.task.delete({ where: { publicId } });
+        }),
     },
     Task: {
         project: (parent, _args, context) => {
