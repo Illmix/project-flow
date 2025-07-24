@@ -54,7 +54,7 @@ model Task {
   publicId   String   @unique
   Name                String
   Description         String?
-  Status              TaskStatus
+  Status              TaskStatus @default(new)
   time_estimate_hours Int?
   created_at          DateTime   @default(now())
 
