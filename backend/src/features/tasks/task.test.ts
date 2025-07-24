@@ -21,8 +21,56 @@ describe('Task Resolvers', () => {
         await prisma.$disconnect();
     });
 
+    it('should fetch all tasks', async () => {
+        const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
 
-    it('should create a new task in the project', async () => {
+        const project = await contextValue.prisma.project.create({
+            data: {
+                Name: 'Test Project',
+                publicId: 'testproject-123',
+                createdById: employee.id,
+            },
+        });
+
+        await contextValue.prisma.task.create({
+            data: {
+                Name: 'Test task',
+                Status: 'new',
+                publicId: 'testtask-123',
+                project_id: project.id,
+            },
+        });
+
+        const response = await server.executeOperation(
+            {
+                query: `
+                    query GetTasks($projectPublicId: String!) {
+                        getTasksForProject(projectPublicId: $projectPublicId) {
+                            Name
+                            publicId
+                        }
+                    }
+                `,
+                variables: {
+                    projectPublicId: project.publicId
+                }
+            },
+            { contextValue }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result');
+        }
+
+        console.log(response.body.singleResult)
+
+        const tasks = response.body.singleResult.data?.getTasksForProject as Task[];
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0].Name).toBe('Test task');
+    })
+
+
+        it('should create a new task in the project', async () => {
         const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
 
         const project = await contextValue.prisma.project.create({
