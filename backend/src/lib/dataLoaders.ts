@@ -7,6 +7,7 @@ export interface IDataLoaders {
     skillEmployees: DataLoader<number, Omit<Employee, 'id' | 'Password'>[]>;
     projectForTask: DataLoader<number, PrismaProject>;
     skillsForTask: DataLoader<number, Skill[]>;
+    employeeForTask: DataLoader<number, Employee>;
 }
 
 /**
@@ -112,6 +113,22 @@ const batchSkillsForTask = async (keys: readonly number[], prisma: PrismaClient)
     return keys.map(key => skillsMap.get(key) || []);
 };
 
+/**
+ * @description Batch function to get assigned employee for many tasks.
+ */
+const batchEmployeesForTasks = async (keys: readonly number[], prisma: PrismaClient): Promise<(Employee | Error)[]> => {
+    const employees = await prisma.employee.findMany({
+        where: { id: { in: [...keys] } },
+    });
+
+    const employeeMap = new Map<number, Employee>();
+    employees.forEach(employee => {
+        employeeMap.set(employee.id, employee);
+    });
+
+    return keys.map(key => employeeMap.get(key) || new Error(`No employee found for ID ${key}`));
+};
+
 
 /**
  * @description Factory function to create new DataLoader instances for each request.
@@ -130,6 +147,9 @@ export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
         ),
         skillsForTask: new DataLoader((keys) =>
             batchSkillsForTask(keys, prisma)
+        ),
+        employeeForTask: new DataLoader((keys) =>
+            batchEmployeesForTasks(keys, prisma)
         ),
     };
 };
