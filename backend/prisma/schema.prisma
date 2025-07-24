@@ -58,11 +58,11 @@ model Task {
   time_estimate_hours Int?
   created_at          DateTime   @default(now())
 
-  assignee_id Int?
-  assignee    Employee?  @relation(fields: [assignee_id], references: [id])
+  assigneeId Int?
+  assignee    Employee?  @relation(fields: [assigneeId], references: [id])
 
-  project_id Int
-  project    Project    @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  projectId Int
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   // Many-to-many relationship: a task may require many skills
   requiredSkills Skill[] @relation("TaskSkills")
