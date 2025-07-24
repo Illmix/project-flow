@@ -213,17 +213,12 @@ describe('Task Resolvers', () => {
             },
         });
 
-        const pythonSkill = await prisma.skill.create({ data: { Name: 'Python' } });
-
         const task = await contextValue.prisma.task.create({
             data: {
                 Name: 'Test task',
                 Status: 'new',
                 publicId: 'testtask-123',
                 project_id: project.id,
-                requiredSkills: {
-                    connect: [{id: pythonSkill.id}]
-                }
             },
         });
 

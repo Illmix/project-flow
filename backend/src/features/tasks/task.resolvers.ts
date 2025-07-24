@@ -48,7 +48,7 @@ export const taskResolvers: Resolvers = {
             const dataToUpdate = { ...taskData };
 
             if (requiredSkillIds) {
-                dataToUpdate.requiredSkills = { connect: requiredSkillIds.map((id: number) => ({ id })) };
+                dataToUpdate.requiredSkills = { set: requiredSkillIds.map((id: number) => ({ id })) };
             }
 
             return context.prisma.task.update({ where: { publicId }, data: dataToUpdate });
