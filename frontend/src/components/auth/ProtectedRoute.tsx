@@ -1,11 +1,23 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import {useAuth} from "../../hooks/useAuth.ts";
+import Spinner from "../ui/Spinner.tsx";
 
 const ProtectedRoute = () => {
-    const token = localStorage.getItem('authToken');
+    const { isAuthenticated, loading } = useAuth();
 
-    // If a token exists, render the nested child routes.
-    // Otherwise, redirect to the login page.
-    return token ? <Outlet /> : <Navigate to="/login" replace />;
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Spinner />
+            </div>
+        );
+    }
+
+    if (isAuthenticated) {
+        return <Outlet />;
+    }
+
+    return <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;
