@@ -1,33 +1,26 @@
-import {useNavigate} from "react-router-dom";
-import {useApolloClient, useMutation} from "@apollo/client";
+import {useMutation} from "@apollo/client";
 import {AuthPayload, SignUpInput} from "../types/graphql.ts";
 import {SIGNUP_MUTATION} from "../graphql/mutations/authMutations.ts";
 import {FormEvent, useState} from "react";
 import Spinner from "../components/ui/Spinner.tsx";
+import {useAuth} from "../hooks/useAuth.ts";
 
 const SignupPage = () => {
-    const navigate = useNavigate();
-    const client = useApolloClient();
-    const [signup, { loading, error }] = useMutation<{signup: AuthPayload}, {input: SignUpInput}>(
-        SIGNUP_MUTATION,
-        {
-            onCompleted: (data) => {
-                localStorage.setItem('authToken', data.signup.token);
-
-                // Reset the Apollo cache to refetch user-specific data
-                client.resetStore().then(() => {
-                    // Redirect to the dashboard
-                    navigate('/dashboard');
-                });
-            },
-        }
-    )
+    const { login: authLogin } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [formError, setFormError] = useState<string | null>(null);
+
+    const [signupMutation, { loading, error }] = useMutation<{signup: AuthPayload}, {input: SignUpInput}>(
+        SIGNUP_MUTATION,
+        {
+        onCompleted: (data) => {
+            authLogin(data.signup.token);
+        },
+    });
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -38,7 +31,7 @@ const SignupPage = () => {
             return;
         }
 
-        signup({ variables: { input: { Name: name, Email: email, Password: password } } });
+        signupMutation({ variables: { input: { Name: name, Email: email, Password: password } } });
     };
 
     return (

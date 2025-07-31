@@ -1,35 +1,27 @@
-import { useMutation, useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
 import { LOGIN_MUTATION } from '../graphql/mutations/authMutations';
 import { LoginInput, AuthPayload } from '../types/graphql';
 import {FormEvent, useState} from "react";
 import Spinner from "../components/ui/Spinner.tsx";
+import {useAuth} from "../hooks/useAuth.ts";
 
 const LoginPage = () => {
-    const navigate = useNavigate();
-    const client = useApolloClient();
-
-    const [login, { loading, error }] = useMutation<{ login: AuthPayload }, { input: LoginInput }>(
-        LOGIN_MUTATION,
-        {
-            onCompleted: (data) => {
-                localStorage.setItem('authToken', data.login.token);
-
-                // Reset the Apollo cache to refetch user-specific data
-                client.resetStore().then(() => {
-                    // Redirect to the dashboard
-                    navigate('/dashboard');
-                });
-            },
-        }
-    );
+    const { login: authLogin } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    const [loginMutation, { loading, error }] = useMutation<{ login: AuthPayload }, { input: LoginInput }>(
+        LOGIN_MUTATION,
+        {
+        onCompleted: (data) => {
+            authLogin(data.login.token);
+        },
+    });
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        login({ variables: { input: { Email: email, Password: password } } });
+        loginMutation({ variables: { input: { Email: email, Password: password } } });
     };
 
     return (
