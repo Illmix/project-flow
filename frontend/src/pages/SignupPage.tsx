@@ -48,7 +48,7 @@ const SignupPage = () => {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-white">
-                            Create an Account
+                            Welcome
                         </h1>
                         <p className="text-gray-400">
                             Join us today!
@@ -98,7 +98,7 @@ const SignupPage = () => {
 
                         {/* Password Input */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                            <label htmlFor="password" className="block text-left text-sm font-medium text-gray-300 mb-2">
                                 Password
                             </label>
                             <input
@@ -114,7 +114,7 @@ const SignupPage = () => {
 
                         {/* Confirm Password Input */}
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                            <label htmlFor="confirmPassword" className="block text-left text-sm font-medium text-gray-300 mb-2">
                                 Confirm Password
                             </label>
                             <input
