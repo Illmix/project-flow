@@ -2,6 +2,7 @@ import './App.css'
 import {Navigate, Route, Routes} from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
+import SignupPage from "./pages/SignupPage.tsx";
 
 function App() {
 
@@ -9,6 +10,7 @@ function App() {
       <Routes>
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
           {/* --- Protected Routes --- */}
           <Route element={<ProtectedRoute />}>
