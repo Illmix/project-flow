@@ -3,9 +3,10 @@ import {Navigate, Route, Routes} from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import SignupPage from "./pages/SignupPage.tsx";
+import {useAuth} from "./hooks/useAuth.ts";
 
 function App() {
-
+  const { user } = useAuth();
   return (
       <Routes>
           {/* Public Route */}
@@ -15,7 +16,9 @@ function App() {
           {/* --- Protected Routes --- */}
           <Route element={<ProtectedRoute />}>
 
-              <Route path="/dashboard" element={<>{}</>} />
+              <Route path="/dashboard" element={<>
+               Hello {user?.Name}
+              </>} />
               <Route path="/project/:publicId" element={<></>} />
           </Route>
 
