@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import SignupPage from "./pages/SignupPage.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
+import MainLayout from "./components/layout/MainLayout.tsx";
 
 function App() {
   const { user } = useAuth();
@@ -15,11 +16,13 @@ function App() {
 
           {/* --- Protected Routes --- */}
           <Route element={<ProtectedRoute />}>
-
-              <Route path="/dashboard" element={<>
-               Hello {user?.Name}
-              </>} />
-              <Route path="/project/:publicId" element={<></>} />
+              <Route element={<MainLayout />}>
+                  <Route path="/dashboard" element={<>
+                      Hello {user?.Name}
+                  </>} />
+                  <Route path="/project/:publicId" element={<></>} />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
