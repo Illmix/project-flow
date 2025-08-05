@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage.tsx";
 import SignupPage from "./pages/SignupPage.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import MainLayout from "./components/layout/MainLayout.tsx";
+import ProjectsPage from "./pages/ProjectsPage.tsx";
 
 function App() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ function App() {
                   <Route path="/dashboard" element={<>
                       Hello {user?.Name}
                   </>} />
+                  <Route path="/projects/" element={<ProjectsPage/>} />
                   <Route path="/project/:publicId" element={<></>} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>

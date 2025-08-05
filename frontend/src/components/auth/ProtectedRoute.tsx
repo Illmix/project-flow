@@ -5,13 +5,10 @@ import Spinner from "../ui/Spinner.tsx";
 const ProtectedRoute = () => {
     const { isAuthenticated, loading } = useAuth();
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <Spinner />
-            </div>
+    if (loading) return (
+            <div className="flex justify-center w-screen mt-20"><Spinner className={"w-10 h-10"} /></div>
         );
-    }
+
 
     if (isAuthenticated) {
         return <Outlet />;
