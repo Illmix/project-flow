@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage.tsx";
 import SignupPage from "./pages/SignupPage.tsx";
 import {useAuth} from "./hooks/useAuth.ts";
 import MainLayout from "./components/layout/MainLayout.tsx";
-import ProjectsPage from "./pages/ProjectsPage.tsx";
+import ProjectsPage from "./pages/project/ProjectsPage.tsx";
 
 function App() {
   const { user } = useAuth();

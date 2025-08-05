@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
-import { GET_PROJECTS_QUERY } from '../graphql/queries/projectQueries';
-import { GetProjectsQuery } from '../types/graphql';
-import Spinner from '../components/ui/Spinner';
+import {GetProjectsQuery} from "../../types/graphql.ts";
+import {GET_PROJECTS_QUERY} from "../../graphql/queries/projectQueries.ts";
+import Spinner from "../../components/ui/Spinner.tsx";
+import ProjectCard from "../../components/projects/ProjectCard.tsx";
 
 const ProjectsPage = () => {
     const { data, loading, error } = useQuery<GetProjectsQuery>(GET_PROJECTS_QUERY);
@@ -22,7 +23,7 @@ const ProjectsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {data?.getProjects.map(project => (
-                    <span key={project.publicId}>{project.Name} {project.publicId}</span>
+                    <ProjectCard project={project}/>
                 ))}
             </div>
         </div>
