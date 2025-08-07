@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import {useAuth} from "../../hooks/useAuth.ts";
+import {Toaster} from "react-hot-toast";
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -23,8 +24,30 @@ const Navbar = () => {
 
 const MainLayout = () => {
     return (
-        <div className="flex flex-col w-full h-screen">
+        <div className="min-h-screen flex flex-col w-full">
             <Navbar />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    style: {
+                        background: '#2a2a3a',
+                        color: '#e2e8f0',
+                        border: '1px solid #475569',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#34d399',
+                            secondary: '#1f2937',
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#f87171',
+                            secondary: '#1f2937',
+                        },
+                    },
+                }}
+            />
             <div className="flex flex-1 overflow-hidden">
                 <main className="flex-1 overflow-y-auto">
                     <Outlet />
