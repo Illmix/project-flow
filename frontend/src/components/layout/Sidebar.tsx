@@ -25,7 +25,7 @@ const Sidebar = () => {
 
     return (
         <aside className="w-64 flex-shrink-0 bg-slate-800 p-4 flex flex-col">
-            <div className="text-2xl font-bold text-white mb-6 ml-2">
+            <div className="text-2xl font-bold text-white mb-4 ml-2 mt-2">
                 ProjectFlow
             </div>
             <nav className="flex flex-col gap-2">
