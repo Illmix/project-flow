@@ -18,9 +18,9 @@ function App() {
           {/* --- Protected Routes --- */}
           <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
-                  <Route path="/dashboard" element={<>
+                  <Route path="/dashboard" element={<div className="w-full">
                       Hello {user?.Name}
-                  </>} />
+                  </div>} />
                   <Route path="/projects/" element={<ProjectsPage/>} />
                   <Route path="/project/:publicId" element={<></>} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
