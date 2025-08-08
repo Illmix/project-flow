@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+.env
+
+# GraphQL Codegen output
+src/types/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
