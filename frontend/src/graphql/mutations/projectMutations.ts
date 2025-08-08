@@ -7,3 +7,14 @@ export const DELETE_PROJECT_MUTATION = gql`
         }
     }
 `;
+
+export const CREATE_PROJECT_MUTATION = gql`
+    mutation CreateProject($input: CreateProjectInput!) {
+        createProject(input: $input) {
+            publicId
+            Name
+            Description
+            created_at
+        }
+    }
+`;
