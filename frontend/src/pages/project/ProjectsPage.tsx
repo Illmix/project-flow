@@ -105,7 +105,7 @@ const ProjectsPage = () => {
 
     return (
         <>
-        <div className="">
+        <div>
             <header className="mb-8 flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Projects</h1>
