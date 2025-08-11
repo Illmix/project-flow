@@ -10,6 +10,7 @@ export interface IDataLoaders {
     employeeForTask: DataLoader<number, Employee>;
     tasksBlocking: DataLoader<number, Task[]>;
     tasksBlockedBy: DataLoader<number, Task[]>;
+    projectTasks: DataLoader<number, Task[]>;
 }
 
 /**
@@ -96,6 +97,20 @@ const batchProjectsForTasks = async (keys: readonly number[], prisma: PrismaClie
     });
 
     return keys.map(key => projectMap.get(key) || new Error(`No project found for ID ${key}`));
+};
+
+/**
+ * @description Batch function to get tasks for many projects.
+ */
+const batchProjectTasks = async (keys: readonly number[], prisma: PrismaClient): Promise<Task[][]> => {
+    const tasks = await prisma.task.findMany({
+        where: {
+            projectId: { in: [...keys] },
+        },
+    });
+
+
+    return mapToKeys(keys, tasks, 'projectId');
 };
 
 /**
@@ -192,6 +207,9 @@ export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
         ),
         tasksBlockedBy: new DataLoader<number, Task[]>((keys) =>
             batchTasksBlockedBy(keys, prisma)
+        ),
+        projectTasks: new DataLoader<number, Task[]>((keys) =>
+            batchProjectTasks(keys, prisma)
         ),
     };
 };

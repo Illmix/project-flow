@@ -21,6 +21,7 @@ const config: CodegenConfig = {
                 },
                 mappers: {
                     Task: '@prisma/client#Task as PrismaTask',
+                    Project: '@prisma/client#Project as PrismaProject',
                 }
             },
         },

@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { Task as PrismaTask } from '@prisma/client';
+import { Task as PrismaTask, Project as PrismaProject } from '@prisma/client';
 import { Context } from '../context.js';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -339,7 +339,7 @@ export type ResolversTypes = ResolversObject<{
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   LoginInput: LoginInput;
   Mutation: ResolverTypeWrapper<{}>;
-  Project: ResolverTypeWrapper<Omit<Project, 'tasks'> & { tasks?: Maybe<Array<ResolversTypes['Task']>> }>;
+  Project: ResolverTypeWrapper<PrismaProject>;
   Query: ResolverTypeWrapper<{}>;
   SignUpInput: SignUpInput;
   Skill: ResolverTypeWrapper<Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversTypes['Employee']>> }>;
@@ -364,7 +364,7 @@ export type ResolversParentTypes = ResolversObject<{
   Int: Scalars['Int']['output'];
   LoginInput: LoginInput;
   Mutation: {};
-  Project: Omit<Project, 'tasks'> & { tasks?: Maybe<Array<ResolversParentTypes['Task']>> };
+  Project: PrismaProject;
   Query: {};
   SignUpInput: SignUpInput;
   Skill: Omit<Skill, 'employees'> & { employees?: Maybe<Array<ResolversParentTypes['Employee']>> };
