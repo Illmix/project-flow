@@ -71,4 +71,13 @@ export const projectsResolvers: Resolvers = {
             });
         }),
     },
+    Project: {
+        /**
+         * Resolves tasks for the project.
+         * @returns The tasks associated with the project.
+         */
+        tasks: (parent, _args, context) => {
+            return context.loaders.projectTasks.load(parent.id);
+        },
+    },
 }
