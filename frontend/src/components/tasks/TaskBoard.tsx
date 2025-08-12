@@ -22,7 +22,7 @@ const TaskBoard = ({ tasks }: TaskBoardProps) => {
     }, [tasks]);
 
     return (
-        <div className="flex gap-6 overflow-x-auto p-2">
+        <div className="flex justify-between gap-10 overflow-x-auto p-2">
             <TaskColumn title="Backlog" tasks={groupedTasks.new} />
             <TaskColumn title="In Progress" tasks={groupedTasks.in_progress} />
             <TaskColumn title="Done" tasks={groupedTasks.done} />
