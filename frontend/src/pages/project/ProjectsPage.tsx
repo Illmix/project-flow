@@ -15,6 +15,7 @@ import Modal from "../../components/ui/Modal.tsx";
 import toast from "react-hot-toast";
 import CreateProjectForm from "../../components/projects/CreateProjectForm.tsx";
 import {Plus} from "lucide-react";
+import {MouseEvent} from "react";
 
 const ProjectsPage = () => {
     const { data, loading, error: queryError } = useQuery<GetProjectsQuery>(GET_PROJECTS_QUERY);
@@ -85,7 +86,9 @@ const ProjectsPage = () => {
         }
     );
 
-    const handleDeleteClick = (projectId: string) => {
+    const handleDeleteClick = (e: MouseEvent<HTMLButtonElement>, projectId: string) => {
+        e.stopPropagation();
+        e.preventDefault();
         setProjectToDelete(projectId);
         setIsDeleteModalOpen(true);
     };
@@ -105,7 +108,7 @@ const ProjectsPage = () => {
 
     return (
         <>
-        <div className="">
+        <div>
             <header className="mb-8 flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Projects</h1>

@@ -1,15 +1,26 @@
-import { useState, FormEvent } from 'react';
+import {useState, FormEvent, useEffect} from 'react';
 import { CreateProjectInput } from '../../types/graphql';
 
 interface CreateProjectFormProps {
     onSubmit: (input: CreateProjectInput) => void;
     onCancel: () => void;
     loading: boolean;
+    initialData?: {
+        Name: string;
+        Description?: string | null;
+    };
 }
 
-const CreateProjectForm = ({ onSubmit, onCancel, loading }: CreateProjectFormProps) => {
+const CreateProjectForm = ({ onSubmit, onCancel, loading, initialData }: CreateProjectFormProps) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+
+    useEffect(() => {
+        if (initialData) {
+            setName(initialData.Name);
+            setDescription(initialData.Description || '');
+        }
+    }, [initialData]);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -62,7 +73,7 @@ const CreateProjectForm = ({ onSubmit, onCancel, loading }: CreateProjectFormPro
                     disabled={loading}
                     className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                 >
-                    {loading ? 'Creating...' : 'Create Project'}
+                    {loading ? (initialData ? 'Saving...' : 'Creating...') : (initialData ? 'Save Changes' : 'Create Project')}
                 </button>
             </div>
         </form>

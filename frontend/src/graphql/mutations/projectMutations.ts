@@ -18,3 +18,13 @@ export const CREATE_PROJECT_MUTATION = gql`
         }
     }
 `;
+
+export const UPDATE_PROJECT_MUTATION = gql`
+    mutation UpdateProject($publicId: String!, $input: UpdateProjectInput!) {
+        updateProject(publicId: $publicId, input: $input) {
+            publicId
+            Name
+            Description
+        }
+    }
+`;
