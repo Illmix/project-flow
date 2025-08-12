@@ -52,7 +52,7 @@ const ProjectDetailsPage = () => {
         DELETE_PROJECT_MUTATION,
         {
             onCompleted: () => {
-                toast.success('Project deleted.');
+                toast.success('Project deleted successfully!');
                 navigate('/projects');
             },
             onError: (err) => toast.error(`Error: ${err.message}`),
@@ -76,7 +76,7 @@ const ProjectDetailsPage = () => {
     const [createTask, { loading: createLoading }] = useMutation<CreateTaskMutation, CreateTaskMutationVariables>(
         CREATE_TASK_MUTATION, {
             onCompleted: () => {
-                toast.success('Task created successfully! 🎉');
+                toast.success('Task created successfully!');
                 setIsCreateTaskModalOpen(false);
             },
             onError: (error) => {

@@ -70,7 +70,7 @@ const CreateProjectForm = ({ onSubmit, onCancel, loading, initialData }: CreateP
                 </button>
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !name.trim()}
                     className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                 >
                     {loading ? (initialData ? 'Saving...' : 'Creating...') : (initialData ? 'Save Changes' : 'Create Project')}
