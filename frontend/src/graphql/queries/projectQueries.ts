@@ -10,3 +10,20 @@ export const GET_PROJECTS_QUERY = gql`
         }
     }
 `;
+
+
+export const GET_PROJECT_DETAILS_QUERY = gql`
+    query GetProjectDetails($publicId: String!) {
+        getProject(publicId: $publicId) {
+            publicId
+            Name
+            Description
+            created_at
+            tasks {
+                publicId
+                Name
+                Status
+            }
+        }
+    }
+`;
