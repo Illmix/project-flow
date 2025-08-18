@@ -7,7 +7,7 @@ import {
     GetProjectDetailsQuery,
     GetProjectDetailsQueryVariables, GetProjectsQuery,
     Task, UpdateProjectMutation, UpdateProjectMutationVariables,
-    CreateTaskMutation, CreateTaskMutationVariables
+    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput
 } from '../../types/graphql';
 import Spinner from '../../components/ui/Spinner';
 import TaskBoard from '../../components/tasks/TaskBoard';
@@ -16,9 +16,13 @@ import {useState} from "react";
 import {DELETE_PROJECT_MUTATION, UPDATE_PROJECT_MUTATION} from "../../graphql/mutations/projectMutations.ts";
 import toast from "react-hot-toast";
 import {Pencil, Plus, Trash2} from "lucide-react";
-import CreateProjectForm from "../../components/projects/CreateProjectForm.tsx";
-import {CREATE_TASK_MUTATION} from "../../graphql/mutations/taskMutations.ts";
-import CreateTaskForm from "../../components/tasks/CreateTaskForm.tsx";
+import ProjectForm from "../../components/projects/ProjectForm.tsx";
+import {
+    CREATE_TASK_MUTATION,
+    DELETE_TASK_MUTATION,
+    UPDATE_TASK_MUTATION
+} from "../../graphql/mutations/taskMutations.ts";
+import TaskForm from "../../components/tasks/TaskForm.tsx";
 
 const ProjectDetailsPage = () => {
     const { publicId } = useParams<{ publicId: string }>();
@@ -28,6 +32,10 @@ const ProjectDetailsPage = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+
+    const [isTaskEditModalOpen, setIsTaskEditModalOpen] = useState(false);
+    const [isTaskDeleteModalOpen, setIsTaskDeleteModalOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     const { data, loading, error } = useQuery<GetProjectDetailsQuery, GetProjectDetailsQueryVariables>(
         GET_PROJECT_DETAILS_QUERY,
@@ -109,6 +117,66 @@ const ProjectDetailsPage = () => {
         }
     );
 
+    const [updateTask, { loading: updateTaskLoading }] = useMutation(UPDATE_TASK_MUTATION, {
+        onCompleted: () => {
+            toast.success("Task updated successfully!");
+            setIsTaskEditModalOpen(false);
+        },
+        onError: (err) => toast.error(`Error: ${err.message}`),
+    });
+
+    const [deleteTask, { loading: deleteTaskLoading }] = useMutation(DELETE_TASK_MUTATION, {
+        onCompleted: () => {
+            toast.success("Task deleted.");
+            setIsTaskDeleteModalOpen(false);
+        },
+        onError: (err) => toast.error(`Error: ${err.message}`),
+        update(cache, { data: result }) {
+            const deletedTaskId = result?.deleteTask.publicId;
+            if (!deletedTaskId) return;
+
+            // Manually update the cache for an instant UI change
+            cache.modify({
+                id: cache.identify({ __typename: 'Project', publicId: publicId }),
+                fields: {
+                    tasks(existingTasks = [], { readField }) {
+                        return existingTasks.filter(
+                            (taskRef: any) => readField('publicId', taskRef) !== deletedTaskId
+                        );
+                    }
+                }
+            });
+        }
+    });
+
+    const handleTaskEditClick = (task: Task) => {
+        setSelectedTask(task);
+        setIsTaskEditModalOpen(true);
+    };
+
+    const handleTaskDeleteClick = (task: Task) => {
+        setSelectedTask(task);
+        setIsTaskDeleteModalOpen(true);
+    };
+
+    const handleTaskUpdateSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description'>) => {
+        if (!selectedTask) return;
+        updateTask({
+            variables: {
+                publicId: selectedTask.publicId,
+                input: {
+                    Name: input.Name,
+                    Description: input.Description,
+                },
+            },
+        });
+    };
+
+    const handleTaskConfirmDelete = () => {
+        if (!selectedTask) return;
+        deleteTask({ variables: { publicId: selectedTask.publicId }});
+    };
+
     const handleCreateTask = (input: Omit<CreateTaskInput, 'projectPublicId'>) => {
         const fullInput: CreateTaskInput = {
             ...input,
@@ -128,7 +196,6 @@ const ProjectDetailsPage = () => {
 
     const project = data?.getProject;
     if (!project) return <div className="text-slate-400 text-center mt-10">Project not found.</div>;
-
 
     return (
         <>
@@ -155,22 +222,53 @@ const ProjectDetailsPage = () => {
                 </header>
 
                 <div className="flex-grow">
-                    <TaskBoard tasks={project.tasks as Task[] || []} />
+                    <TaskBoard
+                        tasks={project.tasks as Task[] || []}
+                        onEditTask={handleTaskEditClick}
+                        onDeleteTask={handleTaskDeleteClick}
+                    />
                 </div>
             </div>
 
-            {/* Create Task Modal */}
+            {/* --- Modals for Tasks --- */}
+            <Modal isOpen={isTaskEditModalOpen} onClose={() => setIsTaskEditModalOpen(false)} title="Edit Task">
+                <TaskForm
+                    variant={"edit"}
+                    onSubmit={handleTaskUpdateSubmit}
+                    onCancel={() => setIsTaskEditModalOpen(false)}
+                    loading={updateTaskLoading}
+                    initialData={selectedTask || undefined}
+                />
+            </Modal>
+
+            <Modal isOpen={isTaskDeleteModalOpen} onClose={() => setIsTaskDeleteModalOpen(false)} title="Delete Task">
+                <p className="text-slate-300 mb-6">
+                    Are you sure you want to delete the task "<strong>{selectedTask?.Name}</strong>"? This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-4">
+                    <button onClick={() => setIsTaskDeleteModalOpen(false)} className="px-4 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600">
+                        Cancel
+                    </button>
+                    <button onClick={handleTaskConfirmDelete} disabled={deleteTaskLoading} className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:bg-red-800">
+                        {deleteTaskLoading ? 'Deleting...' : 'Delete Task'}
+                    </button>
+                </div>
+            </Modal>
+
             <Modal isOpen={isCreateTaskModalOpen} onClose={() => setIsCreateTaskModalOpen(false)} title="Create New Task">
-                <CreateTaskForm
+                <TaskForm
+                    variant={"create"}
                     onSubmit={handleCreateTask}
                     onCancel={() => setIsCreateTaskModalOpen(false)}
                     loading={createLoading}
                 />
             </Modal>
 
+
+
             {/* Edit Project Modal */}
             <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Project">
-                <CreateProjectForm
+                <ProjectForm
                     onSubmit={(input) => updateProject({ variables: { publicId: publicId!, input } })}
                     onCancel={() => setIsEditModalOpen(false)}
                     loading={updateLoading}
@@ -178,7 +276,7 @@ const ProjectDetailsPage = () => {
                 />
             </Modal>
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Project Confirmation Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete Project">
                 <p className="text-slate-300 mb-6">
                     Are you sure you want to delete the project "<strong>{project.Name}</strong>"?

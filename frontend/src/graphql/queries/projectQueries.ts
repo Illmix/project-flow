@@ -23,6 +23,7 @@ export const GET_PROJECT_DETAILS_QUERY = gql`
                 publicId
                 Name
                 Status
+                Description
             }
         }
     }

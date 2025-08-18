@@ -11,7 +11,7 @@ interface CreateProjectFormProps {
     };
 }
 
-const CreateProjectForm = ({ onSubmit, onCancel, loading, initialData }: CreateProjectFormProps) => {
+const ProjectForm = ({ onSubmit, onCancel, loading, initialData }: CreateProjectFormProps) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
 
@@ -80,4 +80,4 @@ const CreateProjectForm = ({ onSubmit, onCancel, loading, initialData }: CreateP
     );
 };
 
-export default CreateProjectForm;
+export default ProjectForm;
