@@ -13,7 +13,7 @@ import {useState} from "react";
 import {CREATE_PROJECT_MUTATION, DELETE_PROJECT_MUTATION} from "../../graphql/mutations/projectMutations.ts";
 import Modal from "../../components/ui/Modal.tsx";
 import toast from "react-hot-toast";
-import CreateProjectForm from "../../components/projects/CreateProjectForm.tsx";
+import ProjectForm from "../../components/projects/ProjectForm.tsx";
 import {Plus} from "lucide-react";
 import {MouseEvent} from "react";
 
@@ -118,7 +118,7 @@ const ProjectsPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
                 >
                     <Plus size={20} />
                     Create Project
@@ -138,7 +138,7 @@ const ProjectsPage = () => {
 
         {/* Modal for Creating a Project */}
         <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Create New Project">
-            <CreateProjectForm
+            <ProjectForm
                 onSubmit={handleCreateSubmit}
                 onCancel={() => setIsCreateModalOpen(false)}
                 loading={createLoading}
