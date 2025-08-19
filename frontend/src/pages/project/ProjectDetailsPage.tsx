@@ -108,7 +108,7 @@ const ProjectDetailsPage = () => {
                             getProject: {
                                 ...existingDetails.getProject,
                                 // Append the new task to the project's existing task list
-                                tasks: [...[existingDetails.getProject.tasks], newTask],
+                                tasks: [...(existingDetails.getProject.tasks || []), newTask],
                             },
                         },
                     });
