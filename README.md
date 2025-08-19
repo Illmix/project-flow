@@ -78,7 +78,7 @@
     ```
 
 5.  **Access the application:**
-    * The application will be available at `http://localhost:3000`.
-    * The GraphQL Playground will be available at `http://localhost:4000/graphql`.
+    * The application will be available at `http://localhost:5173`.
+    * The GraphQL Playground will be available at `http://localhost:5000/graphql`.
 
 ---
