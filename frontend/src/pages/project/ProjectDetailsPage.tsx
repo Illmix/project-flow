@@ -7,12 +7,12 @@ import {
     GetProjectDetailsQuery,
     GetProjectDetailsQueryVariables, GetProjectsQuery,
     Task, UpdateProjectMutation, UpdateProjectMutationVariables,
-    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput
+    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus
 } from '../../types/graphql';
 import Spinner from '../../components/ui/Spinner';
 import TaskBoard from '../../components/tasks/TaskBoard';
 import Modal from "../../components/ui/Modal.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {DELETE_PROJECT_MUTATION, UPDATE_PROJECT_MUTATION} from "../../graphql/mutations/projectMutations.ts";
 import toast from "react-hot-toast";
 import {Pencil, Plus, Trash2} from "lucide-react";
@@ -37,6 +37,8 @@ const ProjectDetailsPage = () => {
     const [isTaskDeleteModalOpen, setIsTaskDeleteModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+    const [tasks, setTasks] = useState<Task[]>([]);
+
     const { data, loading, error } = useQuery<GetProjectDetailsQuery, GetProjectDetailsQueryVariables>(
         GET_PROJECT_DETAILS_QUERY,
         {
@@ -44,6 +46,13 @@ const ProjectDetailsPage = () => {
             skip: !publicId,
         }
     );
+
+    useEffect(() => {
+        if (data?.getProject?.tasks) {
+            setTasks(data.getProject.tasks as Task[]);
+        }
+    }, [data]);
+
     // --- Project Mutations ---
     const [updateProject, { loading: updateLoading }] = useMutation<UpdateProjectMutation, UpdateProjectMutationVariables>(
         UPDATE_PROJECT_MUTATION,
@@ -108,7 +117,7 @@ const ProjectDetailsPage = () => {
                             getProject: {
                                 ...existingDetails.getProject,
                                 // Append the new task to the project's existing task list
-                                tasks: [...[existingDetails.getProject.tasks], newTask],
+                                tasks: [...(existingDetails.getProject.tasks || []), newTask],
                             },
                         },
                     });
@@ -120,9 +129,14 @@ const ProjectDetailsPage = () => {
     const [updateTask, { loading: updateTaskLoading }] = useMutation(UPDATE_TASK_MUTATION, {
         onCompleted: () => {
             toast.success("Task updated successfully!");
-            setIsTaskEditModalOpen(false);
         },
-        onError: (err) => toast.error(`Error: ${err.message}`),
+        onError: (err) => {
+            toast.error(`Error: ${err.message}`)
+            // IMPORTANT: Revert to server state on error
+            if (data?.getProject?.tasks) {
+                setTasks(data.getProject.tasks as Task[]);
+            }
+        },
     });
 
     const [deleteTask, { loading: deleteTaskLoading }] = useMutation(DELETE_TASK_MUTATION, {
@@ -130,7 +144,9 @@ const ProjectDetailsPage = () => {
             toast.success("Task deleted.");
             setIsTaskDeleteModalOpen(false);
         },
-        onError: (err) => toast.error(`Error: ${err.message}`),
+        onError: (err) => {
+            toast.error(`Error: ${err.message}`)
+        },
         update(cache, { data: result }) {
             const deletedTaskId = result?.deleteTask.publicId;
             if (!deletedTaskId) return;
@@ -169,6 +185,35 @@ const ProjectDetailsPage = () => {
                     Description: input.Description,
                 },
             },
+        });
+    };
+
+    const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+        // --- OPTIMISTIC UPDATE ---
+        setTasks(prevTasks => {
+            return prevTasks.map(task =>
+                task.publicId === taskId ? { ...task, Status: newStatus } : task
+            );
+        });
+
+        // --- TRIGGER MUTATION ---
+        updateTask({
+            variables: {
+                publicId: taskId,
+                input: {
+                    Status: newStatus,
+                }
+            },
+            optimisticResponse: {
+                updateTask: {
+                    __typename: 'Task',
+                    publicId: taskId,
+                    Status: newStatus,
+                    // Feature: Provide all data from the task
+                    Name: tasks.find(t => t.publicId === taskId)?.Name || '',
+                    Description: tasks.find(t => t.publicId === taskId)?.Description || '',
+                }
+            }
         });
     };
 
@@ -223,9 +268,10 @@ const ProjectDetailsPage = () => {
 
                 <div className="flex-grow">
                     <TaskBoard
-                        tasks={project.tasks as Task[] || []}
+                        tasks={tasks}
                         onEditTask={handleTaskEditClick}
                         onDeleteTask={handleTaskDeleteClick}
+                        onTaskStatusChange={handleTaskStatusChange}
                     />
                 </div>
             </div>
