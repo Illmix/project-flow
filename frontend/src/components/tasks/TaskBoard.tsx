@@ -9,7 +9,7 @@ type TaskBoardProps = {
     tasks: Task[];
     onEditTask: (task: Task) => void;
     onDeleteTask: (task: Task) => void;
-    onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => void;
+    onTaskStatusChange: (event: DragEndEvent) => void;
 };
 
 const TaskBoard = ({
@@ -43,18 +43,7 @@ const TaskBoard = ({
 
     const handleDragEnd = (event: DragEndEvent) => {
         setActiveTask(null);
-        const { active, over } = event;
-
-        if (over && active.id !== over.id) {
-            const taskId = active.id as string;
-            const newStatus = over.id as TaskStatus;
-
-            // Check if the status is a valid TaskStatus to prevent errors
-            const isValidStatus = Object.values(TaskStatus).includes(newStatus);
-            if (isValidStatus) {
-                onTaskStatusChange(taskId, newStatus);
-            }
-        }
+        onTaskStatusChange(event);
     };
 
     return (

@@ -23,6 +23,7 @@ import {
     UPDATE_TASK_MUTATION
 } from "../../graphql/mutations/taskMutations.ts";
 import TaskForm from "../../components/tasks/TaskForm.tsx";
+import {DragEndEvent} from "@dnd-kit/core";
 
 const ProjectDetailsPage = () => {
     const { publicId } = useParams<{ publicId: string }>();
@@ -188,18 +189,40 @@ const ProjectDetailsPage = () => {
         });
     };
 
-    const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    const handleTaskStatusChange = (
+        event: DragEndEvent
+    ) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const draggedTask = tasks.find(t => t.publicId === active.id);
+        if (!draggedTask) return;
+
+        let newStatus: TaskStatus;
+        const overIsAColumn = Object.values(TaskStatus).includes(over.id as TaskStatus);
+
+        if (overIsAColumn) {
+            newStatus = over.id as TaskStatus;
+        } else {
+            const overTask = tasks.find(t => t.publicId === over.id);
+            if (!overTask) return;
+            newStatus = overTask.Status;
+        }
+
+        if (draggedTask.Status === newStatus) {
+            return;
+        }
         // --- OPTIMISTIC UPDATE ---
-        setTasks(prevTasks => {
-            return prevTasks.map(task =>
-                task.publicId === taskId ? { ...task, Status: newStatus } : task
-            );
-        });
+        setTasks(prevTasks =>
+            prevTasks.map(task =>
+                task.publicId === active.id ? { ...task, Status: newStatus } : task
+            )
+        );
 
         // --- TRIGGER MUTATION ---
         updateTask({
             variables: {
-                publicId: taskId,
+                publicId: active.id as string,
                 input: {
                     Status: newStatus,
                 }
@@ -207,11 +230,11 @@ const ProjectDetailsPage = () => {
             optimisticResponse: {
                 updateTask: {
                     __typename: 'Task',
-                    publicId: taskId,
+                    publicId: active.id,
                     Status: newStatus,
                     // Feature: Provide all data from the task
-                    Name: tasks.find(t => t.publicId === taskId)?.Name || '',
-                    Description: tasks.find(t => t.publicId === taskId)?.Description || '',
+                    Name: tasks.find(t => t.publicId === active.id)?.Name || '',
+                    Description: tasks.find(t => t.publicId === active.id)?.Description || '',
                 }
             }
         });
