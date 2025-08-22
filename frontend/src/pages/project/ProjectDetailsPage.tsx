@@ -209,6 +209,7 @@ const ProjectDetailsPage = () => {
             newStatus = overTask.Status;
         }
 
+        // Check that the status of the task has changed
         if (draggedTask.Status === newStatus) {
             return;
         }
