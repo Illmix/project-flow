@@ -11,6 +11,7 @@ export interface IDataLoaders {
     tasksBlocking: DataLoader<number, Task[]>;
     tasksBlockedBy: DataLoader<number, Task[]>;
     projectTasks: DataLoader<number, Task[]>;
+    skillTaskCount: DataLoader<number, number>;
 }
 
 /**
@@ -146,6 +147,27 @@ const batchEmployeesForTasks = async (keys: readonly number[], prisma: PrismaCli
     return keys.map(key => employeeMap.get(key) || new Error(`No employee found for ID ${key}`));
 };
 
+/**
+ * @description Batch function to get the count of tasks for many skills.
+ */
+const batchTaskCountsForSkills = async (keys: readonly number[], prisma: PrismaClient): Promise<number[]> => {
+    const skills = await prisma.skill.findMany({
+        where: { id: { in: [...keys] } },
+        include: {
+            _count: {
+                select: { tasks: true },
+            },
+        },
+    });
+
+    const countMap = new Map<number, number>();
+    skills.forEach(skill => {
+        countMap.set(skill.id, skill._count.tasks);
+    });
+
+    return keys.map(key => countMap.get(key) || 0);
+};
+
 
 /**
  * @description Batch function to get the tasks that a set of tasks are blocking.
@@ -210,6 +232,9 @@ export const createDataLoaders = (prisma: PrismaClient): IDataLoaders => {
         ),
         projectTasks: new DataLoader<number, Task[]>((keys) =>
             batchProjectTasks(keys, prisma)
+        ),
+        skillTaskCount: new DataLoader<number, number>((keys) =>
+            batchTaskCountsForSkills(keys, prisma)
         ),
     };
 };
