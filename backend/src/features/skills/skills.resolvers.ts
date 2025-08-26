@@ -38,6 +38,9 @@ export const skillsResolvers: Resolvers = {
     Skill: {
         employees: (parent, _args, context) => {
             return context.loaders.skillEmployees.load(parent.id);
-        }
+        },
+        tasksCount: (parent, _args, context) => {
+            return context.loaders.skillTaskCount.load(parent.id);
+        },
     }
 }
