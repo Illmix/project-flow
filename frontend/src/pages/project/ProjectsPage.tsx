@@ -109,7 +109,7 @@ const ProjectsPage = () => {
     return (
         <>
         <div>
-            <header className="mb-8 flex justify-between items-center">
+            <header className="mb-8 flex justify-between items-center pb-4 border-b border-slate-700">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Projects</h1>
                     <p className="text-slate-400 mt-1">
