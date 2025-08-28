@@ -2,7 +2,7 @@ import { Project } from '../../types/graphql';
 import { format } from 'date-fns';
 import {FolderCode, Trash2} from 'lucide-react';
 import Card from "../ui/Card.tsx";
-import {Link} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {MouseEvent} from "react";
 
 type ProjectCardProps = {
@@ -11,9 +11,17 @@ type ProjectCardProps = {
 };
 
 const ProjectCard = ({ project, onDeleteClick }: ProjectCardProps) => {
+    const navigate = useNavigate();
+
+    const onProjectClick = () => {
+        navigate(`/project/${project.publicId}`);
+    }
+
     return (
-        <Card className={"transition-transform flex flex-col justify-between hover:scale-[1.02] cursor-pointer"}>
-            <Link to={`/project/${project.publicId}`} className="p-3 flex flex-col flex-grow">
+        <Card
+            onClick={onProjectClick}
+            className={"transition-transform flex flex-col justify-between hover:scale-[1.02] cursor-pointer"}>
+            <div className="p-3 flex flex-col flex-grow">
                 <div className="mb-2">
                     <header className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -37,7 +45,7 @@ const ProjectCard = ({ project, onDeleteClick }: ProjectCardProps) => {
                         <Trash2 size={18} />
                     </button>
                 </footer>
-            </Link>
+            </div>
         </Card>
     );
 };

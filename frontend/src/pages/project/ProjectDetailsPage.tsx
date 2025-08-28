@@ -7,7 +7,7 @@ import {
     GetProjectDetailsQuery,
     GetProjectDetailsQueryVariables, GetProjectsQuery,
     Task, UpdateProjectMutation, UpdateProjectMutationVariables,
-    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus
+    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus, GetSkillsQuery
 } from '../../types/graphql';
 import Spinner from '../../components/ui/Spinner';
 import TaskBoard from '../../components/tasks/TaskBoard';
@@ -24,6 +24,7 @@ import {
 } from "../../graphql/mutations/taskMutations.ts";
 import TaskForm from "../../components/tasks/TaskForm.tsx";
 import {DragEndEvent} from "@dnd-kit/core";
+import {GET_SKILLS_QUERY} from "../../graphql/queries/skillQueries.ts";
 
 const ProjectDetailsPage = () => {
     const { publicId } = useParams<{ publicId: string }>();
@@ -47,6 +48,8 @@ const ProjectDetailsPage = () => {
             skip: !publicId,
         }
     );
+
+    const { data: skillsData } = useQuery<GetSkillsQuery>(GET_SKILLS_QUERY);
 
     useEffect(() => {
         if (data?.getProject?.tasks) {
@@ -176,7 +179,7 @@ const ProjectDetailsPage = () => {
         setIsTaskDeleteModalOpen(true);
     };
 
-    const handleTaskUpdateSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description'>) => {
+    const handleTaskUpdateSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description' | "requiredSkillIds">) => {
         if (!selectedTask) return;
         updateTask({
             variables: {
@@ -184,6 +187,7 @@ const ProjectDetailsPage = () => {
                 input: {
                     Name: input.Name,
                     Description: input.Description,
+                    requiredSkillIds: input.requiredSkillIds
                 },
             },
         });
@@ -308,6 +312,7 @@ const ProjectDetailsPage = () => {
                     onCancel={() => setIsTaskEditModalOpen(false)}
                     loading={updateTaskLoading}
                     initialData={selectedTask || undefined}
+                    allSkills={skillsData?.getSkills || []}
                 />
             </Modal>
 
@@ -331,6 +336,7 @@ const ProjectDetailsPage = () => {
                     onSubmit={handleCreateTask}
                     onCancel={() => setIsCreateTaskModalOpen(false)}
                     loading={createLoading}
+                    allSkills={skillsData?.getSkills || []}
                 />
             </Modal>
 
