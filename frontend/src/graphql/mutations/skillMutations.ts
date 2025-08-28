@@ -9,11 +9,3 @@ export const CREATE_SKILL_MUTATION = gql`
         }
     }
 `;
-
-export const DELETE_SKILL_MUTATION = gql`
-    mutation DeleteSkill($id: Int!) {
-        deleteSkill(id: $id) {
-            id
-        }
-    }
-`;
