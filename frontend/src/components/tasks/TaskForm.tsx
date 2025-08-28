@@ -1,8 +1,11 @@
 import {useState, FormEvent, useEffect} from 'react';
+import {Skill} from "../../types/graphql.ts";
+import SkillSelector from "../skills/SkillSelector.tsx";
 
-interface TaskFormData {
+export interface TaskFormData {
     Name: string;
     Description?: string | null;
+    requiredSkillIds: number[];
 }
 
 interface TaskFormProps {
@@ -10,27 +13,43 @@ interface TaskFormProps {
     onSubmit: (input: TaskFormData) => void;
     onCancel: () => void;
     loading: boolean;
+    allSkills: Pick<Skill, 'id' | 'Name'>[];
     initialData?: {
         Name: string;
         Description?: string | null;
+        requiredSkills?: Pick<Skill, 'id' | 'Name'>[] | null;
     };
 }
 
-const TaskForm = ({ variant, onSubmit, onCancel, loading, initialData }: TaskFormProps) => {
+const TaskForm = ({
+                      variant,
+                      onSubmit,
+                      onCancel,
+                      loading,
+                      initialData,
+                      allSkills,
+}: TaskFormProps) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [selectedSkills, setSelectedSkills] = useState<Pick<Skill, 'id' | 'Name'>[]>([]);
 
     useEffect(() => {
         if (initialData) {
             setName(initialData.Name);
             setDescription(initialData.Description || '');
+            setSelectedSkills(initialData.requiredSkills || []);
+        } else {
+            setName('');
+            setDescription('');
+            setSelectedSkills([]);
         }
-    }, [initialData]);
+    }, [initialData, variant]);
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!name.trim()) return;
-        onSubmit({ Name: name, Description: description });
+        const requiredSkillIds = selectedSkills.map(skill => skill.id);
+        onSubmit({ Name: name, Description: description, requiredSkillIds });
     };
 
     const submitText = variant === 'create' ? 'Create Task' : 'Save Changes';
@@ -67,6 +86,12 @@ const TaskForm = ({ variant, onSubmit, onCancel, loading, initialData }: TaskFor
                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:opacity-50"
                 />
             </div>
+            <SkillSelector
+                allSkills={allSkills as Skill[]}
+                selectedSkills={selectedSkills as Skill[]}
+                onChange={setSelectedSkills}
+                loading={loading}
+            />
             <div className="flex justify-end gap-4">
                 <button type="button" onClick={onCancel} disabled={loading} className="px-4 py-2 rounded-md
                  bg-slate-700 text-slate-100 hover:bg-slate-600 disabled:opacity-50">
