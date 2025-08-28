@@ -11,7 +11,13 @@ export const skillsResolvers: Resolvers = {
          * @description Fetches a list of all skills.
          */
         getSkills: authenticated(async (_parent, _args, context) => {
-            return context.prisma.skill.findMany();
+            return context.prisma.skill.findMany({
+                orderBy: {
+                    tasks: {
+                        _count: 'desc',
+                    },
+                },
+            });
         }),
         /**
          * @description Fetches a single skill by ID.
@@ -38,6 +44,9 @@ export const skillsResolvers: Resolvers = {
     Skill: {
         employees: (parent, _args, context) => {
             return context.loaders.skillEmployees.load(parent.id);
-        }
+        },
+        tasksCount: (parent, _args, context) => {
+            return context.loaders.skillTaskCount.load(parent.id);
+        },
     }
 }

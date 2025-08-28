@@ -170,4 +170,71 @@ describe('Skill Resolvers', () => {
             ])
         );
     })
+    it('should return skills sorted by their related tasks count', async () => {
+        const {context: contextValue, employee} = await createAuthenticatedContext(prisma);
+        const project = await contextValue.prisma.project.create({
+            data: {
+                Name: 'Test Project',
+                publicId: 'testproject-123',
+                createdById: employee.id,
+            },
+        });
+
+        const skillTS = await prisma.skill.create({ data: { Name: 'TypeScript' } }); // Expect 3 tasks
+        const skillGraphQL = await prisma.skill.create({ data: { Name: 'GraphQL' } }); // Expect 2 tasks
+        const skillPrisma = await prisma.skill.create({ data: { Name: 'Prisma' } }); // Expect 1 task
+        const skillUnused = await prisma.skill.create({ data: { Name: 'Unused' } }); // Expect 0 tasks
+
+        const createTasks = (count: number, skillId: number) => {
+            return Array.from({ length: count }, (_, i) =>
+                prisma.task.create({
+                    data: {
+                        Name: `Task ${i}`,
+                        publicId: `task-${skillId}-${i}`,
+                        projectId: project.id,
+                        Status: 'new',
+                        requiredSkills: { connect: { id: skillId } },
+                    },
+                })
+            );
+        };
+        await Promise.all([
+            ...createTasks(3, skillTS.id),
+            ...createTasks(2, skillGraphQL.id),
+            ...createTasks(1, skillPrisma.id),
+        ]);
+
+        const response = await server.executeOperation(
+            {
+                query: `
+          query GetSkills {
+            getSkills {
+              Name
+              tasksCount
+            }
+          }
+        `,
+            },
+            { contextValue }
+        );
+
+        if (response.body.kind !== 'single') {
+            fail('Expected single result');
+        }
+
+        console.log(response.body.singleResult)
+        const skills = response.body.singleResult.data?.getSkills as { Name: string, tasksCount: number }[];
+
+        expect(skills).toHaveLength(4);
+
+        expect(skills[0].Name).toBe('TypeScript');
+        expect(skills[1].Name).toBe('GraphQL');
+        expect(skills[2].Name).toBe('Prisma');
+        expect(skills[3].Name).toBe('Unused');
+
+        expect(skills[0].tasksCount).toBe(3);
+        expect(skills[1].tasksCount).toBe(2);
+        expect(skills[2].tasksCount).toBe(1);
+        expect(skills[3].tasksCount).toBe(0);
+    });
 });

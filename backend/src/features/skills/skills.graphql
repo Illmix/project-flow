@@ -2,6 +2,7 @@ type Skill {
   id: Int!
   Name: String!
   employees: [Employee!]
+  tasksCount: Int!
 }
 
 input CreateSkillInput {
