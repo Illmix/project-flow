@@ -14,10 +14,15 @@ interface TaskFormProps {
     onCancel: () => void;
     loading: boolean;
     allSkills: Pick<Skill, 'id' | 'Name'>[];
+
+    selectedSkills: Skill[];
+    setSelectedSkills: (skills: Skill[]) => void;
+    onCreateSkill: (skillName: string) => void;
+
     initialData?: {
         Name: string;
         Description?: string | null;
-        requiredSkills?: Pick<Skill, 'id' | 'Name'>[] | null;
+        requiredSkills?: Pick<Skill, 'id' | 'Name' >[] | null;
     };
 }
 
@@ -28,20 +33,20 @@ const TaskForm = ({
                       loading,
                       initialData,
                       allSkills,
-}: TaskFormProps) => {
+                      selectedSkills,
+                      setSelectedSkills,
+                      onCreateSkill
+}: TaskFormProps ) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [selectedSkills, setSelectedSkills] = useState<Pick<Skill, 'id' | 'Name'>[]>([]);
 
     useEffect(() => {
         if (initialData) {
             setName(initialData.Name);
             setDescription(initialData.Description || '');
-            setSelectedSkills(initialData.requiredSkills || []);
         } else {
             setName('');
             setDescription('');
-            setSelectedSkills([]);
         }
     }, [initialData, variant]);
 
@@ -88,8 +93,9 @@ const TaskForm = ({
             </div>
             <SkillSelector
                 allSkills={allSkills as Skill[]}
-                selectedSkills={selectedSkills as Skill[]}
+                selectedSkills={selectedSkills}
                 onChange={setSelectedSkills}
+                onCreateSkill={onCreateSkill}
                 loading={loading}
             />
             <div className="flex justify-end gap-4">
