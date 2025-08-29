@@ -7,7 +7,7 @@ import {
     GetProjectDetailsQuery,
     GetProjectDetailsQueryVariables, GetProjectsQuery,
     Task, UpdateProjectMutation, UpdateProjectMutationVariables,
-    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus, GetSkillsQuery
+    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus, GetSkillsQuery, Skill
 } from '../../types/graphql';
 import Spinner from '../../components/ui/Spinner';
 import TaskBoard from '../../components/tasks/TaskBoard';
@@ -25,6 +25,7 @@ import {
 import TaskForm from "../../components/tasks/TaskForm.tsx";
 import {DragEndEvent} from "@dnd-kit/core";
 import {GET_SKILLS_QUERY} from "../../graphql/queries/skillQueries.ts";
+import { CREATE_SKILL_MUTATION } from '../../graphql/mutations/skillMutations.ts';
 
 const ProjectDetailsPage = () => {
     const { publicId } = useParams<{ publicId: string }>();
@@ -33,11 +34,15 @@ const ProjectDetailsPage = () => {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
 
+    const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
     const [isTaskEditModalOpen, setIsTaskEditModalOpen] = useState(false);
     const [isTaskDeleteModalOpen, setIsTaskDeleteModalOpen] = useState(false);
+
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+    // State for the skills in the task form modal
+    const [skillsForTaskForm, setSkillsForTaskForm] = useState<Skill[]>([]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -91,6 +96,32 @@ const ProjectDetailsPage = () => {
             },
         }
     );
+
+    // --- Skill Mutation ---
+    const [createSkill, { loading: createSkillLoading }] = useMutation(CREATE_SKILL_MUTATION, {
+        onCompleted: (data) => {
+            const newSkill = data.createSkill;
+            if (newSkill) {
+                toast.success(`Skill "${newSkill.Name}" created!`);
+                setSkillsForTaskForm(prevSkills => [...prevSkills, newSkill]);
+            }
+        },
+        onError: (err) => toast.error(`Error: ${err.message}`),
+        update(cache, { data: result }) {
+            const newSkill = result?.createSkill;
+            const existingSkills = cache.readQuery<GetSkillsQuery>({ query: GET_SKILLS_QUERY });
+            if (newSkill && existingSkills) {
+                cache.writeQuery({
+                    query: GET_SKILLS_QUERY,
+                    data: { getSkills: [...existingSkills.getSkills, newSkill] },
+                });
+            }
+        },
+    });
+
+    const handleCreateSkill = (skillName: string) => {
+        createSkill({ variables: { input: { Name: skillName } } });
+    };
 
 
     // --- Task Mutation ---
@@ -190,6 +221,7 @@ const ProjectDetailsPage = () => {
 
     const handleTaskEditClick = (task: Task) => {
         setSelectedTask(task);
+        setSkillsForTaskForm(task.requiredSkills ? [...task.requiredSkills] as Skill[] : []);
         setIsTaskEditModalOpen(true);
     };
 
@@ -198,7 +230,7 @@ const ProjectDetailsPage = () => {
         setIsTaskDeleteModalOpen(true);
     };
 
-    const handleTaskUpdateSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description' | "requiredSkillIds">) => {
+    const handleUpdateTaskSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description' | "requiredSkillIds">) => {
         if (!selectedTask) return;
         updateTask({
             variables: {
@@ -206,10 +238,11 @@ const ProjectDetailsPage = () => {
                 input: {
                     Name: input.Name,
                     Description: input.Description,
-                    requiredSkillIds: input.requiredSkillIds
+                    requiredSkillIds: skillsForTaskForm.map(s => s.id),
                 },
             },
         });
+        setIsTaskEditModalOpen(false);
     };
 
     const handleTaskStatusChange = (
@@ -275,6 +308,7 @@ const ProjectDetailsPage = () => {
             projectPublicId: publicId!,
         };
         createTask({ variables: { input: fullInput } });
+        setIsCreateTaskModalOpen(false);
     };
 
     const handleConfirmDelete = () => {
@@ -327,11 +361,14 @@ const ProjectDetailsPage = () => {
             <Modal isOpen={isTaskEditModalOpen} onClose={() => setIsTaskEditModalOpen(false)} title="Edit Task">
                 <TaskForm
                     variant={"edit"}
-                    onSubmit={handleTaskUpdateSubmit}
+                    onSubmit={handleUpdateTaskSubmit}
                     onCancel={() => setIsTaskEditModalOpen(false)}
-                    loading={updateTaskLoading}
-                    initialData={selectedTask || undefined}
+                    loading={updateTaskLoading || createSkillLoading}
+                    initialData={selectedTask ? { Name: selectedTask.Name, Description: selectedTask.Description } : undefined}
                     allSkills={skillsData?.getSkills || []}
+                    selectedSkills={skillsForTaskForm}
+                    setSelectedSkills={setSkillsForTaskForm}
+                    onCreateSkill={handleCreateSkill}
                 />
             </Modal>
 
@@ -353,12 +390,14 @@ const ProjectDetailsPage = () => {
                 <TaskForm
                     variant={"create"}
                     onSubmit={handleCreateTask}
+                    selectedSkills={skillsForTaskForm}
+                    setSelectedSkills={setSkillsForTaskForm}
+                    onCreateSkill={handleCreateSkill}
                     onCancel={() => setIsCreateTaskModalOpen(false)}
                     loading={createLoading}
                     allSkills={skillsData?.getSkills || []}
                 />
             </Modal>
-
 
 
             {/* Edit Project Modal */}

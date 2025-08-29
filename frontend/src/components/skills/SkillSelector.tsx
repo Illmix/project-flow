@@ -6,6 +6,7 @@ type SkillSelectorProps = {
     allSkills: Skill[];
     selectedSkills: Skill[];
     onChange: (newSelection: Skill[]) => void;
+    onCreateSkill: (skillName: string) => void;
     loading?: boolean;
 };
 
@@ -27,7 +28,13 @@ const useClickOutside = (ref: RefObject<HTMLDivElement | null>, handler: () => v
     }, [ref, handler]);
 };
 
-const SkillSelector = ({ allSkills, selectedSkills, onChange, loading }: SkillSelectorProps) => {
+const SkillSelector = ({
+                           allSkills,
+                           selectedSkills,
+                           onChange,
+                           loading,
+                           onCreateSkill
+}: SkillSelectorProps) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -39,14 +46,34 @@ const SkillSelector = ({ allSkills, selectedSkills, onChange, loading }: SkillSe
 
     // Filter available skills based on search term and what's already selected
     const filteredOptions = useMemo(() => {
-        if (!searchTerm) return [];
-        return allSkills
-            .filter(skill => !selectedSkillIds.has(skill.id))
-            .filter(skill => skill.Name.toLowerCase().includes(searchTerm.toLowerCase()))
+        const availableSkills = allSkills.filter(skill => !selectedSkillIds.has(skill.id));
+
+        // Filter by search term if one exists
+        const finalFiltered = searchTerm
+            ? availableSkills.filter(skill => skill.Name.toLowerCase().includes(searchTerm.toLowerCase()))
+            : availableSkills; // If no search term, show all available
+
+        // Check if the user's term can be a new skill
+        const exactMatch = allSkills.some(skill => skill.Name.toLowerCase() === searchTerm.toLowerCase().trim());
+        if (searchTerm.trim() && !exactMatch) {
+            // Special create option
+            finalFiltered.push({
+                id: -1, // Temporary ID
+                Name: searchTerm.trim(),
+                tasksCount: 0,
+                __typename: 'Skill',
+            });
+        }
+
+        return finalFiltered;
     }, [searchTerm, allSkills, selectedSkillIds]);
 
-    const addSkill = (skill: Skill) => {
-        onChange([...selectedSkills, skill]);
+    const handleSelectOption = (skill: Skill) => {
+        if (skill.id === -1) {
+            onCreateSkill(searchTerm.trim());
+        } else {
+            onChange([...selectedSkills, skill]);
+        }
         setSearchTerm(''); // Clear input after selection
         setIsOpen(false);
     };
@@ -85,7 +112,7 @@ const SkillSelector = ({ allSkills, selectedSkills, onChange, loading }: SkillSe
                     {filteredOptions.map(skill => (
                         <li
                             key={skill.id}
-                            onClick={() => addSkill(skill)}
+                            onClick={() => handleSelectOption(skill)}
                             className="px-4 py-2 text-slate-300 hover:bg-slate-700 cursor-pointer"
                         >
                             {skill.Name}
