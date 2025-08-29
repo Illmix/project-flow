@@ -18,6 +18,10 @@ export const UPDATE_TASK_MUTATION = gql`
             Name
             Description
             Status
+            requiredSkills {
+                id
+                Name
+            }
         }
     }
 `;

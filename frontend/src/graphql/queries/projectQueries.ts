@@ -24,6 +24,10 @@ export const GET_PROJECT_DETAILS_QUERY = gql`
                 Name
                 Status
                 Description
+                requiredSkills {
+                    id
+                    Name
+                }
             }
         }
     }
