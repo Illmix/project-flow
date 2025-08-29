@@ -141,6 +141,25 @@ const ProjectDetailsPage = () => {
                 setTasks(data.getProject.tasks as Task[]);
             }
         },
+        update(cache, { data: result }) {
+            const updatedTask = result?.updateTask;
+            if (!updatedTask) return;
+
+            cache.modify({
+                id: cache.identify(updatedTask),
+                fields: {
+                    Name() {
+                        return updatedTask.Name;
+                    },
+                    Description() {
+                        return updatedTask.Description;
+                    },
+                    requiredSkills() {
+                        return updatedTask.requiredSkills;
+                    },
+                },
+            });
+        },
     });
 
     const [deleteTask, { loading: deleteTaskLoading }] = useMutation(DELETE_TASK_MUTATION, {
