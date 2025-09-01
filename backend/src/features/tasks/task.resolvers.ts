@@ -12,6 +12,7 @@ import type {
 import {authenticated} from "../../lib/permissions.js";
 import {randomUUID} from "crypto";
 import {Task} from "@prisma/client";
+import {checkAndRemoveUnusedSkills} from "../skills/skills.service.js";
 
 
 export const taskResolvers: Resolvers = {
@@ -91,7 +92,31 @@ export const taskResolvers: Resolvers = {
          */
         deleteTask: authenticated(async (_parent, args: MutationDeleteTaskArgs, context) => {
             const { publicId } = args;
-            return context.prisma.task.delete({ where: { publicId } });
+            const taskToDelete = await context.prisma.task.findUnique({
+                where: { publicId },
+                select: {
+                    id: true,
+                    requiredSkills: {
+                        select: { id: true },
+                    },
+                },
+            });
+
+            if (!taskToDelete) {
+                throw new Error('Task not found.');
+            }
+
+            const skillIdsToCheck = taskToDelete.requiredSkills.map(skill => skill.id);
+
+            await context.prisma.task.delete({
+                where: { id: taskToDelete.id },
+            });
+
+            if (skillIdsToCheck.length > 0) {
+                await checkAndRemoveUnusedSkills(skillIdsToCheck, context.prisma);
+            }
+
+            return taskToDelete;
         }),
 
         /**
