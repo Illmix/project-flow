@@ -108,15 +108,11 @@ export const taskResolvers: Resolvers = {
 
             const skillIdsToCheck = taskToDelete.requiredSkills.map(skill => skill.id);
 
-            await context.prisma.task.delete({
-                where: { id: taskToDelete.id },
-            });
-
             if (skillIdsToCheck.length > 0) {
                 await checkAndRemoveUnusedSkills(skillIdsToCheck, context.prisma);
             }
 
-            return taskToDelete;
+            return context.prisma.task.delete({ where: { publicId } });
         }),
 
         /**
