@@ -292,6 +292,7 @@ const ProjectDetailsPage = () => {
                     // Feature: Provide all data from the task
                     Name: tasks.find(t => t.publicId === active.id)?.Name || '',
                     Description: tasks.find(t => t.publicId === active.id)?.Description || '',
+                    requiredSkills: tasks.find(t => t.publicId === active.id)?.requiredSkills || [],
                 }
             }
         });
