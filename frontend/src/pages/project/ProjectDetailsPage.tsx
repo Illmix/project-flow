@@ -150,61 +150,73 @@ const ProjectDetailsPage = () => {
                 </div>
             </div>
 
-            {/* --- Modals for Tasks --- */}
-            <Modal isOpen={isTaskEditModalOpen} onClose={() => setIsTaskEditModalOpen(false)} title="Edit Task">
+            {/* --- Modals --- */}
+            <Modal
+                isOpen={isTaskEditModalOpen}
+                onClose={() => {setIsTaskEditModalOpen(false);
+                    setSkillsForTaskForm([])}}
+                title="Edit Task">
                 <TaskForm
-                    variant={"edit"}
+                    variant="edit"
                     onSubmit={handleUpdateTaskSubmit}
-                    onCancel={() => setIsTaskEditModalOpen(false)}
-                    loading={updateTaskLoading || createSkillLoading}
-                    initialData={selectedTask ? { Name: selectedTask.Name, Description: selectedTask.Description } : undefined}
+                    onCancel={() => {setIsTaskEditModalOpen(false)}}
+                    loading={taskLoading || skillLoading}
+                    initialData={selectedTask || undefined}
                     allSkills={skillsData?.getSkills || []}
                     selectedSkills={skillsForTaskForm}
                     setSelectedSkills={setSkillsForTaskForm}
-                    onCreateSkill={handleCreateSkill}
-                />
+                    onCreateSkill={(name) => createSkill({ input: { Name: name } },
+                        (newSkill) => setSkillsForTaskForm(prev => [...prev, newSkill]))} />
             </Modal>
-
-            <Modal isOpen={isTaskDeleteModalOpen} onClose={() => setIsTaskDeleteModalOpen(false)} title="Delete Task">
+            <Modal
+                isOpen={isCreateTaskModalOpen}
+                onClose={() => {setIsCreateTaskModalOpen(false);
+                    setSkillsForTaskForm([])}} title="Create New Task">
+                <TaskForm
+                    variant="create"
+                    onSubmit={handleCreateTask}
+                    onCancel={() => {setIsCreateTaskModalOpen(false); setSkillsForTaskForm([])}}
+                    loading={taskLoading || skillLoading}
+                    allSkills={skillsData?.getSkills || []}
+                    selectedSkills={skillsForTaskForm}
+                    setSelectedSkills={setSkillsForTaskForm}
+                    onCreateSkill={(name) => createSkill({ input: { Name: name } },
+                        (newSkill) => setSkillsForTaskForm(prev => [...prev, newSkill]))} />
+            </Modal>
+            <Modal isOpen={isTaskDeleteModalOpen}
+                   onClose={() => setIsTaskDeleteModalOpen(false)}
+                   title="Delete Task">
                 <p className="text-slate-300 mb-6">
-                    Are you sure you want to delete the task "<strong>{selectedTask?.Name}</strong>"? This action cannot be undone.
+                    Are you sure you want to delete the task "<strong>{selectedTask?.Name}</strong>"?
                 </p>
                 <div className="flex justify-end gap-4">
-                    <button onClick={() => setIsTaskDeleteModalOpen(false)} className="px-4 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600">
+                    <button onClick={() => setIsTaskDeleteModalOpen(false)}
+                            className="px-4 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600">
                         Cancel
                     </button>
-                    <button onClick={handleTaskConfirmDelete} disabled={deleteTaskLoading} className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:bg-red-800">
-                        {deleteTaskLoading ? 'Deleting...' : 'Delete Task'}
+                    <button onClick={() => deleteTask({ publicId: selectedTask!.publicId },
+                        () => setIsTaskDeleteModalOpen(false))} disabled={taskLoading}
+                            className="px-4 py-2 rounded-md bg-red-600
+                             text-white hover:bg-red-700 disabled:bg-red-800">
+                        {taskLoading ? 'Deleting...' : 'Delete Task'}
                     </button>
                 </div>
             </Modal>
-
-            <Modal isOpen={isCreateTaskModalOpen} onClose={() => setIsCreateTaskModalOpen(false)} title="Create New Task">
-                <TaskForm
-                    variant={"create"}
-                    onSubmit={handleCreateTask}
-                    selectedSkills={skillsForTaskForm}
-                    setSelectedSkills={setSkillsForTaskForm}
-                    onCreateSkill={handleCreateSkill}
-                    onCancel={() => setIsCreateTaskModalOpen(false)}
-                    loading={createLoading}
-                    allSkills={skillsData?.getSkills || []}
-                />
-            </Modal>
-
-
-            {/* Edit Project Modal */}
-            <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Project">
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Edit Project">
                 <ProjectForm
-                    onSubmit={(input) => updateProject({ variables: { publicId: publicId!, input } })}
+                    onSubmit={(input) =>
+                        updateProject({ variables: { publicId: publicId!, input },
+                            onCompleted: () => setIsEditModalOpen(false) })}
                     onCancel={() => setIsEditModalOpen(false)}
-                    loading={updateLoading}
+                    loading={projectLoading}
                     initialData={project}
                 />
             </Modal>
-
-            {/* Delete Project Confirmation Modal */}
-            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete Project">
+            <Modal isOpen={isDeleteModalOpen}
+                   onClose={() => setIsDeleteModalOpen(false)} title="Delete Project">
                 <p className="text-slate-300 mb-6">
                     Are you sure you want to delete the project "<strong>{project.Name}</strong>"?
                     <strong> All related tasks will also be deleted.</strong>
@@ -216,11 +228,11 @@ const ProjectDetailsPage = () => {
                         Cancel
                     </button>
                     <button
-                        onClick={handleConfirmDelete}
-                        disabled={deleteLoading}
-                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700
-                         disabled:bg-red-800">
-                        {deleteLoading ? 'Deleting...' : 'Delete Project'}
+                        onClick={() =>
+                            deleteProject({ variables: { publicId: publicId! } })}
+                        disabled={projectLoading}
+                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:bg-red-800">
+                        {projectLoading ? 'Deleting...' : 'Delete Project'}
                     </button>
                 </div>
             </Modal>
