@@ -1,6 +1,8 @@
 import {useState, useMemo, useRef, useEffect, RefObject} from 'react';
 import { Skill } from '../../types/graphql';
 import { X } from 'lucide-react';
+import {skillSchema} from "../../lib/validators.ts";
+import toast from "react-hot-toast";
 
 type SkillSelectorProps = {
     allSkills: Skill[];
@@ -70,13 +72,19 @@ const SkillSelector = ({
 
     const handleSelectOption = (skill: Skill) => {
         if (skill.id === -1) {
-            onCreateSkill(searchTerm.trim());
+            const validation = skillSchema.safeParse({ Name: searchTerm.trim() });
+            if (!validation.success) {
+                toast.error(validation.error.message);
+                return;
+            }
+            onCreateSkill(validation.data.Name);
         } else {
             onChange([...selectedSkills, skill]);
         }
-        setSearchTerm(''); // Clear input after selection
+        setSearchTerm('');
         setIsOpen(false);
     };
+
 
     const removeSkill = (skillId: number) => {
         onChange(selectedSkills.filter(s => s.id !== skillId));
