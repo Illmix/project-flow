@@ -51,11 +51,27 @@ export const client = new ApolloClient({
 
     cache: new InMemoryCache({
         typePolicies: {
+            Query: {
+                fields: {
+                    getProjects: {
+                        merge(existing, incoming) {
+                            return incoming ?? existing;
+                        },
+                    },
+                },
+            },
             Project: {
                 keyFields: ['publicId'],
             },
             Task: {
                 keyFields: ['publicId'],
+                fields: {
+                    requiredSkills: {
+                        merge(existing, incoming) {
+                            return incoming ?? existing;
+                        },
+                    },
+                },
             },
             Employee: {
                 keyFields: ['publicId'],
@@ -66,3 +82,4 @@ export const client = new ApolloClient({
         },
     }),
 });
+
