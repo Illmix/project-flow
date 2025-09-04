@@ -55,162 +55,51 @@ const ProjectDetailsPage = () => {
         }
     }, [data]);
 
-    // --- Project Mutations ---
-    const [updateProject, { loading: updateLoading }] = useMutation<UpdateProjectMutation, UpdateProjectMutationVariables>(
-        UPDATE_PROJECT_MUTATION,
-        {
-            onCompleted: () => {
-                toast.success('Project updated successfully!');
-                setIsEditModalOpen(false);
-            },
-            onError: (err) => toast.error(`Error: ${err.message}`),
-        }
-    );
+    const project = data?.getProject;
 
-    const [deleteProject, { loading: deleteLoading }] = useMutation<DeleteProjectMutation, DeleteProjectMutationVariables>(
-        DELETE_PROJECT_MUTATION,
-        {
-            onCompleted: () => {
-                toast.success('Project deleted successfully!');
-                navigate('/projects');
-            },
-            onError: (err) => toast.error(`Error: ${err.message}`),
-            update(cache, { data: result }) {
-                const deletedProjectId = result?.deleteProject.publicId;
-                const existingProjects = cache.readQuery<GetProjectsQuery>({ query: GET_PROJECTS_QUERY });
-                if (deletedProjectId && existingProjects) {
-                    cache.writeQuery({
-                        query: GET_PROJECTS_QUERY,
-                        data: {
-                            getProjects: existingProjects.getProjects.filter(p => p.publicId !== deletedProjectId)
-                        },
-                    });
-                }
-            },
-        }
-    );
-
-    // --- Skill Mutation ---
-    const [createSkill, { loading: createSkillLoading }] = useMutation(CREATE_SKILL_MUTATION, {
-        onCompleted: (data) => {
-            const newSkill = data.createSkill;
-            if (newSkill) {
-                toast.success(`Skill "${newSkill.Name}" created!`);
-                setSkillsForTaskForm(prevSkills => [...prevSkills, newSkill]);
-            }
-        },
-        onError: (err) => toast.error(`Error: ${err.message}`),
-        update(cache, { data: result }) {
-            const newSkill = result?.createSkill;
-            const existingSkills = cache.readQuery<GetSkillsQuery>({ query: GET_SKILLS_QUERY });
-            if (newSkill && existingSkills) {
-                cache.writeQuery({
-                    query: GET_SKILLS_QUERY,
-                    data: { getSkills: [...existingSkills.getSkills, newSkill] },
-                });
-            }
-        },
-    });
-
-    const handleCreateSkill = (skillName: string) => {
-        createSkill({ variables: { input: { Name: skillName } } });
+    // --- Event Handlers ---
+    const handleCreateTask = (input: Omit<CreateTaskInput, 'projectPublicId'>) => {
+        const fullInput: CreateTaskInput = { ...input, projectPublicId: publicId! };
+        createTask({ input: fullInput }, () => {
+            setIsCreateTaskModalOpen(false);
+            setSkillsForTaskForm([]);
+        });
     };
 
-
-    // --- Task Mutation ---
-    const [createTask, { loading: createLoading }] = useMutation<CreateTaskMutation, CreateTaskMutationVariables>(
-        CREATE_TASK_MUTATION, {
-            onCompleted: () => {
-                toast.success('Task created successfully!');
-                setIsCreateTaskModalOpen(false);
+    const handleUpdateTaskSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description' | 'requiredSkillIds'>) => {
+        if (!selectedTask) return;
+        updateTask({
+            publicId: selectedTask.publicId,
+            input: {
+                Name: input.Name,
+                Description: input.Description,
+                requiredSkillIds: skillsForTaskForm.map(s => s.id),
             },
-            onError: (error) => {
-                toast.error(`Error: ${error.message}`);
-            },
-            update(cache, { data: result }) {
-                const newTask = result?.createTask;
-                if (!newTask) return;
+        }, () => {
+            setIsTaskEditModalOpen(false);
+        });
+    };
 
-                const existingDetails = cache.readQuery<GetProjectDetailsQuery, GetProjectDetailsQueryVariables>({
-                    query: GET_PROJECT_DETAILS_QUERY,
-                    variables: { publicId: publicId! },
-                });
+    const handleTaskStatusChange = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || !project?.tasks || active.id === over.id) return;
 
-                // If the project is in the cache, update its tasks array
-                if (existingDetails?.getProject) {
-                    cache.writeQuery({
-                        query: GET_PROJECT_DETAILS_QUERY,
-                        variables: { publicId: publicId! },
-                        data: {
-                            getProject: {
-                                ...existingDetails.getProject,
-                                // Append the new task to the project's existing task list
-                                tasks: [...(existingDetails.getProject.tasks || []), newTask],
-                            },
-                        },
-                    });
-                }
-            }
-        }
-    );
+        const originalTasks = tasks;
+        const draggedTask = originalTasks.find(t => t.publicId === active.id);
+        const newStatus = over.id as TaskStatus;
 
-    const [updateTask, { loading: updateTaskLoading }] = useMutation(UPDATE_TASK_MUTATION, {
-        onCompleted: () => {
-            toast.success("Task updated successfully!");
-        },
-        onError: (err) => {
-            toast.error(`Error: ${err.message}`)
-            // IMPORTANT: Revert to server state on error
-            if (data?.getProject?.tasks) {
-                setTasks(data.getProject.tasks as Task[]);
-            }
-        },
-        update(cache, { data: result }) {
-            const updatedTask = result?.updateTask;
-            if (!updatedTask) return;
+        if (!draggedTask || draggedTask.Status === newStatus) return;
 
-            cache.modify({
-                id: cache.identify(updatedTask),
-                fields: {
-                    Name() {
-                        return updatedTask.Name;
-                    },
-                    Description() {
-                        return updatedTask.Description;
-                    },
-                    requiredSkills() {
-                        return updatedTask.requiredSkills;
-                    },
-                },
-            });
-        },
-    });
+        // Optimistic UI update
+        const updatedTasks = originalTasks.map(t => t.publicId === active.id ? { ...t, Status: newStatus } : t);
+        setTasks(updatedTasks);
 
-    const [deleteTask, { loading: deleteTaskLoading }] = useMutation(DELETE_TASK_MUTATION, {
-        onCompleted: () => {
-            toast.success("Task deleted.");
-            setIsTaskDeleteModalOpen(false);
-        },
-        onError: (err) => {
-            toast.error(`Error: ${err.message}`)
-        },
-        update(cache, { data: result }) {
-            const deletedTaskId = result?.deleteTask.publicId;
-            if (!deletedTaskId) return;
-
-            // Manually update the cache for an instant UI change
-            cache.modify({
-                id: cache.identify({ __typename: 'Project', publicId: publicId }),
-                fields: {
-                    tasks(existingTasks = [], { readField }) {
-                        return existingTasks.filter(
-                            (taskRef: any) => readField('publicId', taskRef) !== deletedTaskId
-                        );
-                    }
-                }
-            });
-        }
-    });
+        updateTask(
+            { publicId: active.id as string, input: { Status: newStatus } },
+            undefined,
+            () => setTasks(originalTasks) // Revert on error
+        );
+    };
 
     const handleTaskEditClick = (task: Task) => {
         setSelectedTask(task);
@@ -223,98 +112,8 @@ const ProjectDetailsPage = () => {
         setIsTaskDeleteModalOpen(true);
     };
 
-    const handleUpdateTaskSubmit = (input: Pick<UpdateTaskInput, 'Name' | 'Description' | "requiredSkillIds">) => {
-        if (!selectedTask) return;
-        updateTask({
-            variables: {
-                publicId: selectedTask.publicId,
-                input: {
-                    Name: input.Name,
-                    Description: input.Description,
-                    requiredSkillIds: skillsForTaskForm.map(s => s.id),
-                },
-            },
-        });
-        setIsTaskEditModalOpen(false);
-    };
-
-    const handleTaskStatusChange = (
-        event: DragEndEvent
-    ) => {
-        const { active, over } = event;
-        if (!over) return;
-
-        const draggedTask = tasks.find(t => t.publicId === active.id);
-        if (!draggedTask) return;
-
-        let newStatus: TaskStatus;
-        const overIsAColumn = Object.values(TaskStatus).includes(over.id as TaskStatus);
-
-        if (overIsAColumn) {
-            newStatus = over.id as TaskStatus;
-        } else {
-            const overTask = tasks.find(t => t.publicId === over.id);
-            if (!overTask) return;
-            newStatus = overTask.Status;
-        }
-
-        // Check that the status of the task has changed
-        if (draggedTask.Status === newStatus) {
-            return;
-        }
-        // --- OPTIMISTIC UPDATE ---
-        setTasks(prevTasks =>
-            prevTasks.map(task =>
-                task.publicId === active.id ? { ...task, Status: newStatus } : task
-            )
-        );
-
-        // --- TRIGGER MUTATION ---
-        updateTask({
-            variables: {
-                publicId: active.id as string,
-                input: {
-                    Status: newStatus,
-                }
-            },
-            optimisticResponse: {
-                updateTask: {
-                    __typename: 'Task',
-                    publicId: active.id,
-                    Status: newStatus,
-                    // Feature: Provide all data from the task
-                    Name: tasks.find(t => t.publicId === active.id)?.Name || '',
-                    Description: tasks.find(t => t.publicId === active.id)?.Description || '',
-                    requiredSkills: tasks.find(t => t.publicId === active.id)?.requiredSkills || [],
-                }
-            }
-        });
-    };
-
-    const handleTaskConfirmDelete = () => {
-        if (!selectedTask) return;
-        deleteTask({ variables: { publicId: selectedTask.publicId }});
-    };
-
-    const handleCreateTask = (input: Omit<CreateTaskInput, 'projectPublicId'>) => {
-        const fullInput: CreateTaskInput = {
-            ...input,
-            projectPublicId: publicId!,
-        };
-        createTask({ variables: { input: fullInput } });
-        setIsCreateTaskModalOpen(false);
-    };
-
-    const handleConfirmDelete = () => {
-        deleteProject({ variables: { publicId: publicId! } });
-        setIsDeleteModalOpen(false);
-    };
-
-
     if (loading) return <div className="flex justify-center mt-20"><Spinner /></div>;
     if (error) return <div className="text-red-400 text-center mt-10">Error: {error.message}</div>;
-
-    const project = data?.getProject;
     if (!project) return <div className="text-slate-400 text-center mt-10">Project not found.</div>;
 
     return (
