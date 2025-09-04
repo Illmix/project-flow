@@ -186,7 +186,7 @@ const ProjectDetailsPage = () => {
             <Modal isOpen={isTaskDeleteModalOpen}
                    onClose={() => setIsTaskDeleteModalOpen(false)}
                    title="Delete Task">
-                <p className="text-slate-300 mb-6">
+                <p className="text-slate-300 mb-6 break-all">
                     Are you sure you want to delete the task "<strong>{selectedTask?.Name}</strong>"?
                 </p>
                 <div className="flex justify-end gap-4">
@@ -217,7 +217,7 @@ const ProjectDetailsPage = () => {
             </Modal>
             <Modal isOpen={isDeleteModalOpen}
                    onClose={() => setIsDeleteModalOpen(false)} title="Delete Project">
-                <p className="text-slate-300 mb-6">
+                <p className="text-slate-300 mb-6 break-all">
                     Are you sure you want to delete the project "<strong>{project.Name}</strong>"?
                     <strong> All related tasks will also be deleted.</strong>
                 </p>
