@@ -1,17 +1,23 @@
 import { useMutation } from '@apollo/client';
 import toast from 'react-hot-toast';
-import { CREATE_TASK_MUTATION } from '../graphql/mutations/taskMutations';
+import { CREATE_TASK_MUTATION, UPDATE_TASK_MUTATION, DELETE_TASK_MUTATION } from '../graphql/mutations/taskMutations';
 import {
     CreateTaskMutation,
     CreateTaskMutationVariables,
+    UpdateTaskMutation,
+    UpdateTaskMutationVariables,
+    DeleteTaskMutation,
+    DeleteTaskMutationVariables,
     Task
 } from '../types/graphql';
 
 // The shape of the onCompleted callbacks
-// They mirror the pattern used in useSkillMutations
-// and allow callers to react to successful operations.
 
 type CreateTaskOnCompleted = (task: Task) => void;
+
+type UpdateTaskOnCompleted = (task: Task) => void;
+
+type DeleteTaskOnCompleted = (task: Task) => void;
 
 export const useTaskMutations = () => {
     const [createTaskMutation, { loading: createLoading }] = useMutation<
@@ -20,6 +26,21 @@ export const useTaskMutations = () => {
     >(CREATE_TASK_MUTATION, {
         onError: (err) => toast.error(`Error: ${err.message}`),
     });
+
+    const [updateTaskMutation, { loading: updateLoading }] = useMutation<
+        UpdateTaskMutation,
+        UpdateTaskMutationVariables
+    >(UPDATE_TASK_MUTATION, {
+        onError: (err) => toast.error(`Error: ${err.message}`),
+    });
+
+    const [deleteTaskMutation, { loading: deleteLoading }] = useMutation<
+        DeleteTaskMutation,
+        DeleteTaskMutationVariables
+    >(DELETE_TASK_MUTATION, {
+        onError: (err) => toast.error(`Error: ${err.message}`),
+    });
+
     const createTask = (
         variables: CreateTaskMutationVariables,
         onCompleted?: CreateTaskOnCompleted
@@ -36,8 +57,42 @@ export const useTaskMutations = () => {
         });
     };
 
+    const updateTask = (
+        variables: UpdateTaskMutationVariables,
+        onCompleted?: UpdateTaskOnCompleted
+    ) => {
+        updateTaskMutation({
+            variables,
+            onCompleted: (data) => {
+                const updatedTask = data.updateTask;
+                if (updatedTask) {
+                    toast.success('Task updated successfully!');
+                    if (onCompleted) onCompleted(updatedTask as Task);
+                }
+            },
+        });
+    };
+
+    const deleteTask = (
+        variables: DeleteTaskMutationVariables,
+        onCompleted?: DeleteTaskOnCompleted
+    ) => {
+        deleteTaskMutation({
+            variables,
+            onCompleted: (data) => {
+                const removedTask = data.deleteTask;
+                if (removedTask) {
+                    toast.success('Task deleted successfully!');
+                    if (onCompleted) onCompleted(removedTask as Task);
+                }
+            },
+        });
+    };
+
     return {
         createTask,
-        loading: createLoading,
+        updateTask,
+        deleteTask,
+        loading: createLoading || updateLoading || deleteLoading,
     };
 };
