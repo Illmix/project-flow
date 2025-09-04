@@ -8,8 +8,9 @@ import {
     UpdateTaskMutationVariables,
     DeleteTaskMutation,
     DeleteTaskMutationVariables,
-    Task
+    Task, GetProjectDetailsQuery, GetProjectDetailsQueryVariables
 } from '../types/graphql';
+import {GET_PROJECT_DETAILS_QUERY} from "../graphql/queries/projectQueries.ts";
 
 // The shape of the onCompleted callbacks
 
@@ -17,28 +18,66 @@ type CreateTaskOnCompleted = (task: Task) => void;
 
 type UpdateTaskOnCompleted = (task: Task) => void;
 
+type UpdateTaskOnError = () => void;
+
 type DeleteTaskOnCompleted = (task: Task) => void;
 
-export const useTaskMutations = () => {
+export const useTaskMutations = (projectPublicId: string) => {
     const [createTaskMutation, { loading: createLoading }] = useMutation<
         CreateTaskMutation,
         CreateTaskMutationVariables
     >(CREATE_TASK_MUTATION, {
         onError: (err) => toast.error(`Error: ${err.message}`),
+        update(cache, { data: result }) {
+            const newTask = result?.createTask;
+            if (!newTask) return;
+
+            const existingDetails = cache.readQuery<GetProjectDetailsQuery, GetProjectDetailsQueryVariables>({
+                query: GET_PROJECT_DETAILS_QUERY,
+                variables: { publicId: projectPublicId! },
+            });
+
+            if (existingDetails?.getProject) {
+                cache.writeQuery({
+                    query: GET_PROJECT_DETAILS_QUERY,
+                    variables: { publicId: projectPublicId! },
+                    data: {
+                        getProject: {
+                            ...existingDetails.getProject,
+                            tasks: [...(existingDetails.getProject.tasks || []), newTask],
+                        },
+                    },
+                });
+            }
+        }
     });
 
     const [updateTaskMutation, { loading: updateLoading }] = useMutation<
         UpdateTaskMutation,
         UpdateTaskMutationVariables
-    >(UPDATE_TASK_MUTATION, {
-        onError: (err) => toast.error(`Error: ${err.message}`),
-    });
+    >(UPDATE_TASK_MUTATION);
 
     const [deleteTaskMutation, { loading: deleteLoading }] = useMutation<
         DeleteTaskMutation,
         DeleteTaskMutationVariables
     >(DELETE_TASK_MUTATION, {
         onError: (err) => toast.error(`Error: ${err.message}`),
+        update(cache, { data: result }) {
+            const deletedTaskId = result?.deleteTask.publicId;
+            if (!deletedTaskId) return;
+
+            // Manually update the cache for an instant UI change
+            cache.modify({
+                id: cache.identify({ __typename: 'Project', publicId: projectPublicId }),
+                fields: {
+                    tasks(existingTasks = [], { readField }) {
+                        return existingTasks.filter(
+                            (taskRef: any) => readField('publicId', taskRef) !== deletedTaskId
+                        );
+                    }
+                }
+            });
+        }
     });
 
     const createTask = (
@@ -59,7 +98,8 @@ export const useTaskMutations = () => {
 
     const updateTask = (
         variables: UpdateTaskMutationVariables,
-        onCompleted?: UpdateTaskOnCompleted
+        onCompleted?: UpdateTaskOnCompleted,
+        onError?: UpdateTaskOnError
     ) => {
         updateTaskMutation({
             variables,
@@ -69,6 +109,10 @@ export const useTaskMutations = () => {
                     toast.success('Task updated successfully!');
                     if (onCompleted) onCompleted(updatedTask as Task);
                 }
+            },
+            onError: (err) => {
+                toast.error(`Error: ${err.message}`)
+                if (onError) onError()
             },
         });
     };
