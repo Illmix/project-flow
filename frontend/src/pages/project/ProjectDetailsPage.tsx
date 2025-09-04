@@ -99,6 +99,7 @@ const ProjectDetailsPage = () => {
             undefined,
             () => setTasks(originalTasks) // Revert on error
         );
+    }
 
     const handleTaskEditClick = (task: Task) => {
         setSelectedTask(task);
