@@ -116,6 +116,11 @@ const ProjectDetailsPage = () => {
     if (error) return <div className="text-red-400 text-center mt-10">Error: {error.message}</div>;
     if (!project) return <div className="text-slate-400 text-center mt-10">Project not found.</div>;
 
+    const projectInitialData = {
+        Name: project.Name,
+        Description: project.Description ?? undefined,
+    };
+
     return (
         <>
             <div className="flex flex-col">
@@ -212,7 +217,7 @@ const ProjectDetailsPage = () => {
                             onCompleted: () => setIsEditModalOpen(false) })}
                     onCancel={() => setIsEditModalOpen(false)}
                     loading={projectLoading}
-                    initialData={project}
+                    initialData={projectInitialData}
                 />
             </Modal>
             <Modal isOpen={isDeleteModalOpen}
