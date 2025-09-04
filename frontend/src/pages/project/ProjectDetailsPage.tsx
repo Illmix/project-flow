@@ -1,36 +1,27 @@
-import {useNavigate, useParams} from 'react-router-dom';
-import {useMutation, useQuery} from '@apollo/client';
-import {GET_PROJECT_DETAILS_QUERY, GET_PROJECTS_QUERY} from '../../graphql/queries/projectQueries';
+import {useParams} from 'react-router-dom';
+import {useQuery} from '@apollo/client';
+import {GET_PROJECT_DETAILS_QUERY} from '../../graphql/queries/projectQueries';
 import {
     CreateTaskInput,
-    DeleteProjectMutation, DeleteProjectMutationVariables,
     GetProjectDetailsQuery,
-    GetProjectDetailsQueryVariables, GetProjectsQuery,
-    Task, UpdateProjectMutation, UpdateProjectMutationVariables,
-    CreateTaskMutation, CreateTaskMutationVariables, UpdateTaskInput, TaskStatus, GetSkillsQuery, Skill
+    GetProjectDetailsQueryVariables,
+    Task, UpdateTaskInput, TaskStatus, GetSkillsQuery, Skill
 } from '../../types/graphql';
 import Spinner from '../../components/ui/Spinner';
 import TaskBoard from '../../components/tasks/TaskBoard';
 import Modal from "../../components/ui/Modal.tsx";
 import {useEffect, useState} from "react";
-import {DELETE_PROJECT_MUTATION, UPDATE_PROJECT_MUTATION} from "../../graphql/mutations/projectMutations.ts";
-import toast from "react-hot-toast";
 import {Pencil, Plus, Trash2} from "lucide-react";
 import ProjectForm from "../../components/projects/ProjectForm.tsx";
-import {
-    CREATE_TASK_MUTATION,
-    DELETE_TASK_MUTATION,
-    UPDATE_TASK_MUTATION
-} from "../../graphql/mutations/taskMutations.ts";
 import TaskForm from "../../components/tasks/TaskForm.tsx";
 import {DragEndEvent} from "@dnd-kit/core";
 import {GET_SKILLS_QUERY} from "../../graphql/queries/skillQueries.ts";
-import { CREATE_SKILL_MUTATION } from '../../graphql/mutations/skillMutations.ts';
+import {useProjectMutations} from "../../hooks/useProjectMutations.ts";
+import { useSkillMutations } from '../../hooks/useSkillMutations.ts';
+import {useTaskMutations} from "../../hooks/useTaskMutations.ts";
 
 const ProjectDetailsPage = () => {
     const { publicId } = useParams<{ publicId: string }>();
-
-    const navigate = useNavigate();
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -46,16 +37,18 @@ const ProjectDetailsPage = () => {
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
+    // --- Data Fetching ---
     const { data, loading, error } = useQuery<GetProjectDetailsQuery, GetProjectDetailsQueryVariables>(
-        GET_PROJECT_DETAILS_QUERY,
-        {
-            variables: { publicId: publicId! },
-            skip: !publicId,
-        }
+        GET_PROJECT_DETAILS_QUERY, { variables: { publicId: publicId! }, skip: !publicId }
     );
-
     const { data: skillsData } = useQuery<GetSkillsQuery>(GET_SKILLS_QUERY);
 
+    // --- Custom hooks to handle mutations logic ---
+    const { updateProject, deleteProject, loading: projectLoading } = useProjectMutations();
+    const { createSkill, loading: skillLoading } = useSkillMutations();
+    const { createTask, updateTask, deleteTask, loading: taskLoading } = useTaskMutations(publicId!);
+
+    // Sync local task state when query data changes
     useEffect(() => {
         if (data?.getProject?.tasks) {
             setTasks(data.getProject.tasks as Task[]);
