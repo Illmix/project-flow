@@ -51,6 +51,15 @@ export const client = new ApolloClient({
 
     cache: new InMemoryCache({
         typePolicies: {
+            Query: {
+                fields: {
+                    getProjects: {
+                        merge(existing, incoming) {
+                            return incoming ?? existing;
+                        },
+                    },
+                },
+            },
             Project: {
                 keyFields: ['publicId'],
             },
