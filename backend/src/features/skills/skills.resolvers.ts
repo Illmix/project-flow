@@ -4,6 +4,7 @@ import type {
     MutationCreateSkillArgs
 } from '../../graphql/types.js';
 import {authenticated} from "../../lib/permissions.js";
+import {checkAndRemoveUnusedSkills} from "./skills.service.js";
 
 export const skillsResolvers: Resolvers = {
     Query: {
@@ -11,13 +12,18 @@ export const skillsResolvers: Resolvers = {
          * @description Fetches a list of all skills.
          */
         getSkills: authenticated(async (_parent, _args, context) => {
-            return context.prisma.skill.findMany({
+            const skills = context.prisma.skill.findMany({
                 orderBy: {
                     tasks: {
                         _count: 'desc',
                     },
                 },
             });
+            const skillIdsToCheck = await skills.then(skills => skills.map(
+                skill => skill.id
+            ))
+            await checkAndRemoveUnusedSkills(skillIdsToCheck, context.prisma);
+            return skills
         }),
         /**
          * @description Fetches a single skill by ID.
