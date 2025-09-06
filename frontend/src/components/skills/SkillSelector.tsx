@@ -74,7 +74,7 @@ const SkillSelector = ({
         if (skill.id === -1) {
             const validation = skillSchema.safeParse({ Name: searchTerm.trim() });
             if (!validation.success) {
-                toast.error(validation.error.message);
+                toast.error(validation.error.issues[0].message);
                 return;
             }
             onCreateSkill(validation.data.Name);
