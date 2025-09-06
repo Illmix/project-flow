@@ -19,7 +19,7 @@ interface TaskFormProps {
     setSelectedSkills: (skills: Skill[]) => void;
     onCreateSkill: (skillName: string) => void;
 
-    initialData?: TaskFormData;
+    initialData?: TaskFormData | null;
 }
 
 const TaskForm = ({

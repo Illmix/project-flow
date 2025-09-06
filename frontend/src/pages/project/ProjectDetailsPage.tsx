@@ -166,7 +166,11 @@ const ProjectDetailsPage = () => {
                     onSubmit={handleUpdateTaskSubmit}
                     onCancel={() => {setIsTaskEditModalOpen(false)}}
                     loading={taskLoading || skillLoading}
-                    initialData={selectedTask || undefined}
+                    initialData={selectedTask && {
+                        Name: selectedTask.Name,
+                        Description: selectedTask.Description ?? undefined,
+                        requiredSkillIds: selectedTask.requiredSkills?.map(skill => skill.id),
+                    }}
                     allSkills={skillsData?.getSkills || []}
                     selectedSkills={skillsForTaskForm}
                     setSelectedSkills={setSkillsForTaskForm}
