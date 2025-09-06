@@ -116,6 +116,11 @@ const ProjectDetailsPage = () => {
     if (error) return <div className="text-red-400 text-center mt-10">Error: {error.message}</div>;
     if (!project) return <div className="text-slate-400 text-center mt-10">Project not found.</div>;
 
+    const projectInitialData = {
+        Name: project.Name,
+        Description: project.Description ?? undefined,
+    };
+
     return (
         <>
             <div className="flex flex-col">
@@ -161,7 +166,11 @@ const ProjectDetailsPage = () => {
                     onSubmit={handleUpdateTaskSubmit}
                     onCancel={() => {setIsTaskEditModalOpen(false)}}
                     loading={taskLoading || skillLoading}
-                    initialData={selectedTask || undefined}
+                    initialData={selectedTask && {
+                        Name: selectedTask.Name,
+                        Description: selectedTask.Description ?? undefined,
+                        requiredSkillIds: selectedTask.requiredSkills?.map(skill => skill.id),
+                    }}
                     allSkills={skillsData?.getSkills || []}
                     selectedSkills={skillsForTaskForm}
                     setSelectedSkills={setSkillsForTaskForm}
@@ -186,7 +195,7 @@ const ProjectDetailsPage = () => {
             <Modal isOpen={isTaskDeleteModalOpen}
                    onClose={() => setIsTaskDeleteModalOpen(false)}
                    title="Delete Task">
-                <p className="text-slate-300 mb-6">
+                <p className="text-slate-300 mb-6 break-all">
                     Are you sure you want to delete the task "<strong>{selectedTask?.Name}</strong>"?
                 </p>
                 <div className="flex justify-end gap-4">
@@ -212,12 +221,12 @@ const ProjectDetailsPage = () => {
                             onCompleted: () => setIsEditModalOpen(false) })}
                     onCancel={() => setIsEditModalOpen(false)}
                     loading={projectLoading}
-                    initialData={project}
+                    initialData={projectInitialData}
                 />
             </Modal>
             <Modal isOpen={isDeleteModalOpen}
                    onClose={() => setIsDeleteModalOpen(false)} title="Delete Project">
-                <p className="text-slate-300 mb-6">
+                <p className="text-slate-300 mb-6 break-all">
                     Are you sure you want to delete the project "<strong>{project.Name}</strong>"?
                     <strong> All related tasks will also be deleted.</strong>
                 </p>
